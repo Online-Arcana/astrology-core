@@ -1,4 +1,4 @@
-# temporary core package validation for the current split tree
+# temporary core package validation after regression migration
 name: tmp-package-smoke
 on:
   push:
