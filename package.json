@@ -6,7 +6,7 @@
   "private": true,
   "license": "MIT",
   "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "files": ["dist", "assets", "styles", "LICENSE"],
+  "files": ["dist", "assets", "styles", "vendor", "LICENSE"],
   "scripts": {
     "vendor:astronomy": "npm --prefix vendor/astronomy install && npm --prefix vendor/astronomy run build",
     "vendor:places": "npm --prefix vendor/places/packages/countries install --ignore-scripts --workspaces=false --no-audit && npm --prefix vendor/places/packages/countries run build",
