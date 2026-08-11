@@ -7,6 +7,7 @@ await build({
   format: "esm",
   platform: "node",
   target: "node22",
+  mainFields: ["module", "main"],
   sourcemap: true,
   logLevel: "info",
 });
@@ -18,6 +19,7 @@ await build({
   format: "esm",
   platform: "browser",
   target: "es2023",
+  mainFields: ["module", "main"],
   sourcemap: true,
   logLevel: "info",
 });
