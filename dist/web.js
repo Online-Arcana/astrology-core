@@ -64616,6 +64616,8 @@ export {
   WebPlaces,
   calc,
   calculationProfile,
+  compatibilityDomains,
+  signs,
   webPlaces,
   webPorts
 };
