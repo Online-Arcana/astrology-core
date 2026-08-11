@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { CscApi, CscCity, CscCountry, CscCountryMeta, CscRegion } from "./model.js";
 
-const root = fileURLToPath(new URL("../data/places/", import.meta.url));
+const root = fileURLToPath(new URL("../data/places/data/", import.meta.url));
 const countryDirs = new Map<string, string>();
 const stateDirs = new Map<string, Map<string, string>>();
 
