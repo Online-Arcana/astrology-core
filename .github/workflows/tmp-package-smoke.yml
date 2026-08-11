@@ -1,4 +1,4 @@
-# temporary core package validation
+# temporary core package validation for the current split tree
 name: tmp-package-smoke
 on:
   push:
