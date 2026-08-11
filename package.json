@@ -6,31 +6,24 @@
   "private": true,
   "license": "MIT",
   "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "files": [
-    "dist",
-    "assets",
-    "styles",
-    "LICENSE",
-    "vendor/astronomy",
-    "vendor/places/packages/countries",
-    "vendor/time/packages/core",
-    "vendor/time/packages/timezone"
-  ],
+  "files": ["dist", "assets", "styles", "LICENSE"],
   "scripts": {
     "vendor:astronomy": "npm --prefix vendor/astronomy install && npm --prefix vendor/astronomy run build",
     "vendor:places": "npm --prefix vendor/places/packages/countries install --ignore-scripts --workspaces=false --no-audit && npm --prefix vendor/places/packages/countries run build",
     "vendor:time": "rm -rf vendor/time/packages/locales && npm --prefix vendor/time ci && npm --prefix vendor/time run build",
     "vendor:build": "npm run vendor:astronomy && npm run vendor:places && npm run vendor:time",
     "check": "tsc -p tsconfig.json --noEmit",
-    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "build": "rm -rf dist && tsc -p tsconfig.json && node scripts/bundle.mjs",
     "test": "node test/core.mjs",
     "ci": "npm run check && npm run build && npm test"
   },
-  "dependencies": {
+  "devDependencies": {
     "@countrystatecity/countries": "file:vendor/places/packages/countries",
     "@js-joda/core": "file:vendor/time/packages/core",
     "@js-joda/timezone": "file:vendor/time/packages/timezone",
-    "astronomia": "file:vendor/astronomy"
-  },
-  "devDependencies": { "@types/node": "^22.15.3", "typescript": "5.9.3" }
+    "@types/node": "^22.15.3",
+    "astronomia": "file:vendor/astronomy",
+    "esbuild": "^0.25.0",
+    "typescript": "5.9.3"
+  }
 }
