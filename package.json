@@ -14,7 +14,8 @@
     "vendor:build": "npm run vendor:astronomy && npm run vendor:places && npm run vendor:time",
     "check": "tsc -p tsconfig.json --noEmit",
     "build": "rm -rf dist && tsc -p tsconfig.json",
-    "ci": "npm run check && npm run build"
+    "test": "node test/core.mjs",
+    "ci": "npm run check && npm run build && npm test"
   },
   "dependencies": {
     "@countrystatecity/countries": "file:vendor/places/packages/countries",
