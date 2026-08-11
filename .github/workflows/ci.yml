@@ -22,4 +22,5 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run build
+      - run: npm test
       - run: git diff --exit-code -- dist
