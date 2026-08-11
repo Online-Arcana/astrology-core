@@ -1,0 +1,36 @@
+name: tmp-wheel-rerun
+on:
+  push:
+    branches: [agent/split-modules]
+    paths: [.github/workflows/tmp-wheel-rerun.yml]
+permissions:
+  contents: write
+jobs:
+  refactor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: agent/split-modules
+          submodules: recursive
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Run corrected refactor
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path('.github/workflows/tmp-wheel-refactor.yml').read_text()
+          marker='      - name: Share wheel geometry\n        run: |\n'
+          block=src.split(marker,1)[1]
+          lines=[line[10:] if line.startswith('          ') else line for line in block.splitlines()]
+          script='\n'.join(lines)+'\n'
+          script=script.replace('export const signs =', 'export const signOrder =')
+          script=script.replace('signGlyphs, signs as signOrder, titleCase', 'signGlyphs, signOrder, titleCase')
+          script=script.replace('signGlyphs, signs, titleCase', 'signGlyphs, signOrder, titleCase')
+          script=script.replace('for (let i=0;i<signs.length;i+=1) { const sign=signs[i] as Sign;', 'for (let i=0;i<signOrder.length;i+=1) { const sign=signOrder[i] as Sign;')
+          script=script.replace('import type { PointId, WheelData } from "./types.js";', 'import type { PointId, Sign, WheelData } from "./types.js";')
+          script=script.replace("p.write_text(s)\nPY\ncat > src/wheel/svg.ts", "s=s.replace('const svg =', 'let wheelInstance = 0;\\n\\nconst svg =', 1)\np.write_text(s)\nPY\ncat > src/wheel/svg.ts")
+          Path('/tmp/wheel-refactor.sh').write_text(script)
+          PY
+          bash /tmp/wheel-refactor.sh
