@@ -18,14 +18,12 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-
       - name: Build behaviour-preserving shared package
         shell: bash
         run: |
           set -euo pipefail
           rm -rf src dist node_modules
           mkdir -p src
-
           cp reference/chartWheel.astrology.ts src/chartWheel.ts
           cp reference/chartWheelGlyphs.astrology.ts src/chartWheelGlyphs.ts
 
@@ -37,15 +35,13 @@ jobs:
           new = '''import type { Aspect, ChartWheelCalculation, PointId, Sign } from "./types.js";'''
           if old not in text:
               raise SystemExit('expected astrology type imports were not found')
-          text = text.replace(old, new, 1).replace('AstralCalculation', 'ChartWheelCalculation')
-          path.write_text(text)
+          path.write_text(text.replace(old, new, 1).replace('AstralCalculation', 'ChartWheelCalculation'))
           PY
 
           cat > src/types.ts <<'EOF'
           export type Sign =
             | "aries" | "taurus" | "gemini" | "cancer" | "leo" | "virgo"
             | "libra" | "scorpio" | "sagittarius" | "capricorn" | "aquarius" | "pisces";
-
           export type PlanetId =
             | "sun" | "moon" | "mercury" | "venus" | "mars"
             | "jupiter" | "saturn" | "uranus" | "neptune" | "pluto";
@@ -61,40 +57,27 @@ jobs:
           export type HouseSystem = "placidus" | "whole_sign" | "equal" | "porphyry";
           export type HouseNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
-          export interface WheelSignPosition {
-            longitudeDegrees: number;
-          }
-
-          export interface WheelCalculationValue<T> {
-            value: T | null;
-          }
-
-          export interface WheelPoint {
-            position: WheelCalculationValue<WheelSignPosition>;
-          }
-
+          export interface WheelSignPosition { longitudeDegrees: number; }
+          export interface WheelCalculationValue<T> { value: T | null; }
+          export interface WheelPoint { position: WheelCalculationValue<WheelSignPosition>; }
           export interface WheelHouse {
             number: HouseNumber;
             cusp: WheelCalculationValue<WheelSignPosition>;
             end: WheelCalculationValue<WheelSignPosition>;
           }
-
           export type WheelHouseMap = {
             "1": WheelHouse; "2": WheelHouse; "3": WheelHouse; "4": WheelHouse;
             "5": WheelHouse; "6": WheelHouse; "7": WheelHouse; "8": WheelHouse;
             "9": WheelHouse; "10": WheelHouse; "11": WheelHouse; "12": WheelHouse;
           };
-
           export interface WheelHouseChart {
             status: "calculated" | "fallback" | "unavailable";
             houses: WheelHouseMap;
           }
-
           export type AspectKind =
             | "conjunction" | "opposition" | "trine" | "square" | "sextile"
             | "quincunx" | "semisextile" | "semisquare" | "sesquiquadrate"
             | "quintile" | "biquintile";
-
           export interface Aspect {
             id: string;
             a: PointId;
@@ -103,14 +86,9 @@ jobs:
             class: "major" | "minor";
             character: "flowing" | "challenging" | "contextual" | "adjusting" | "creative";
           }
-
           export interface ChartWheelCalculation {
-            provenance: {
-              calculationFingerprint: string;
-            };
-            settings: {
-              primaryHouseSystem: HouseSystem;
-            };
+            provenance: { calculationFingerprint: string; };
+            settings: { primaryHouseSystem: HouseSystem; };
             system: {
               points: Record<PointId, WheelPoint>;
               houses: Record<HouseSystem, WheelHouseChart>;
@@ -123,24 +101,10 @@ jobs:
           export { renderChartWheel } from "./chartWheel.js";
           export { applyCanonicalWheelGlyphs } from "./chartWheelGlyphs.js";
           export type {
-            AngleId,
-            Aspect,
-            AspectKind,
-            ChartWheelCalculation,
-            HouseNumber,
-            HouseSystem,
-            LotId,
-            NodeId,
-            OtherPointId,
-            PlanetId,
-            PointId,
-            Sign,
-            WheelCalculationValue,
-            WheelHouse,
-            WheelHouseChart,
-            WheelHouseMap,
-            WheelPoint,
-            WheelSignPosition,
+            AngleId, Aspect, AspectKind, ChartWheelCalculation, HouseNumber,
+            HouseSystem, LotId, NodeId, OtherPointId, PlanetId, PointId, Sign,
+            WheelCalculationValue, WheelHouse, WheelHouseChart, WheelHouseMap,
+            WheelPoint, WheelSignPosition,
           } from "./types.js";
           EOF
 
@@ -162,9 +126,7 @@ jobs:
               "check": "tsc -p tsconfig.json --noEmit",
               "build": "rm -rf dist && tsc -p tsconfig.json"
             },
-            "devDependencies": {
-              "typescript": "5.9.3"
-            }
+            "devDependencies": { "typescript": "5.9.3" }
           }
           EOF
 
@@ -195,35 +157,7 @@ jobs:
           }
           EOF
 
-          cat > .gitignore <<'EOF'
-          node_modules/
-          EOF
-
-          cat > .github/workflows/ci.yml <<'EOF'
-          name: CI
-
-          on:
-            push:
-            pull_request:
-
-          permissions:
-            contents: read
-
-          jobs:
-            verify:
-              runs-on: ubuntu-latest
-              steps:
-                - uses: actions/checkout@v6
-                - uses: actions/setup-node@v6
-                  with:
-                    node-version: 22
-                    cache: npm
-                - run: npm ci
-                - run: npm run check
-                - run: npm run build
-                - run: git diff --exit-code -- dist
-          EOF
-
+          printf 'node_modules/\n' > .gitignore
           cat > README.md <<'EOF'
           # Astral Chart Wheel
 
@@ -248,12 +182,10 @@ jobs:
           npm install --ignore-scripts
           npm run check
           npm run build
-
           rm -rf reference
-          rm -f .github/workflows/bootstrap-assets.yml
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
+          git add -A -- ':!.github/workflows'
           git commit -m 'Create shared chart wheel package'
           git push
