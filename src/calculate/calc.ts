@@ -1,4 +1,6 @@
 import { calculateAstronomy } from "../astro/calculate.js";
+import { loadAstronomia } from "../astro/astronomia.js";
+import { loadLunarOrbit } from "../astro/lunarOrbit.js";
 import { calculateLots } from "../astro/lots.js";
 import { calculateSect } from "../astro/sect.js";
 import { aspectProfile } from "../aspect/catalogue.js";
@@ -6,7 +8,10 @@ import { calculateCompatibility } from "../compat/calculate.js";
 import { compatibilityProfile } from "../compat/rank.js";
 import { dignityProfile } from "../dignity/catalogue.js";
 import { calculateEclipses } from "../eclipse/calculate.js";
+import { loadEclipses } from "../eclipse/astronomia.js";
+import { loadCscCatalogue } from "../place/csc.js";
 import { resolveBirthTime } from "../time/calculate.js";
+import { loadTimeResolver } from "../time/vendor.js";
 import type { BirthInput } from "../types/base.js";
 import type { Calculation } from "../types/calc.js";
 import { vendorRevisions } from "../vendor/revisions.js";
@@ -118,5 +123,24 @@ export const calc = async (input: BirthInput, options: CalcOptions, ports: CalcP
       compatibilityProfile,
       calculationFingerprint,
     },
+  };
+};
+
+export const loadPorts = async (version = "0.20.0"): Promise<CalcPorts> => {
+  const [places, timeResolver, astronomy, lunarOrbit, eclipses] = await Promise.all([
+    loadCscCatalogue(),
+    loadTimeResolver(),
+    loadAstronomia(),
+    loadLunarOrbit(),
+    loadEclipses(),
+  ]);
+  return {
+    places,
+    timeResolver,
+    astronomy,
+    lunarOrbit,
+    eclipses,
+    version,
+    now: () => new Date().toISOString(),
   };
 };
