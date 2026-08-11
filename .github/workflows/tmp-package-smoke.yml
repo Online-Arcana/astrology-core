@@ -22,30 +22,46 @@ jobs:
       - run: npm install --ignore-scripts
       - run: npm run check
       - run: npm run build
-      - name: Show bundled timezone resolution
-        run: |
-          node --input-type=module <<'NODE'
-          const core = await import('./dist/index.js');
-          const time = await core.loadTimeResolver();
-          const value = time.resolve({ date: '2000-01-01', time: '12:00:00', zone: 'Europe/London' });
-          console.log(JSON.stringify(value, null, 2));
-          NODE
       - run: npm test
-      - name: Install packed core in empty consumers
+      - name: Install packed core in empty consumer
         run: |
           set -euo pipefail
           rm -rf /tmp/astral-core-consumer
           mkdir -p /tmp/astral-core-consumer
-          npm pack --pack-destination /tmp/astral-core-consumer
+          npm pack --pack-destination /tmp/astral-core-consumer >/dev/null
           tar -tzf /tmp/astral-core-consumer/astral-core-0.1.0.tgz > /tmp/astral-core-package.txt
           if grep -q '^package/vendor/' /tmp/astral-core-package.txt; then
             echo 'vendor source leaked into packed core' >&2
             exit 1
           fi
-          grep -q '^package/data/places/countries.json$' /tmp/astral-core-package.txt
+          grep -q '^package/data/places/manifest.json$' /tmp/astral-core-package.txt
+          grep -q '^package/data/places/data/countries.json$' /tmp/astral-core-package.txt
+          grep -q '^package/dist/web.js$' /tmp/astral-core-package.txt
           grep -q '^package/dist/wheel.js$' /tmp/astral-core-package.txt
           cd /tmp/astral-core-consumer
           printf '{"name":"core-consumer","private":true,"type":"module"}\n' > package.json
-          npm install ./astral-core-0.1.0.tgz --ignore-scripts
-          node -e 'import("astral-core").then(async m => { const places = await m.loadCscCatalogue(); const country = await places.countries("Europe"); if (!country.some(x => x.code === "GB")) throw new Error("CSC data unavailable"); const time = await m.loadTimeResolver(); const value = time.resolve({ date: "2000-01-01", time: "12:00:00", zone: "Europe/London" }); if (value.kind !== "exact") throw new Error(`timezone unavailable: ${JSON.stringify(value)}`); await m.loadPorts("package-smoke"); console.log("self-contained astral-core import passed") })'
-          node -e 'import("astral-core/wheel").then(m => { if (typeof m.renderSvg !== "function") throw new Error("renderSvg export missing"); if (typeof m.emptyWheelData !== "function") throw new Error("emptyWheelData export missing"); console.log("browser wheel entry import passed") })'
+          npm install ./astral-core-0.1.0.tgz --ignore-scripts >/dev/null
+          node -e 'import("astral-core").then(async m => { const places = await m.loadCscCatalogue(); const countries = await places.countries("Europe"); if (!countries.some(x => x.code === "GB")) throw new Error("CSC data unavailable"); const time = await m.loadTimeResolver(); const value = time.resolve({date:"2000-01-01",time:"12:00:00",zone:"Europe/London"}); if(value.kind!=="exact") throw new Error(JSON.stringify(value)); await m.loadPorts("package-smoke"); console.log("node core passed") })'
+          node -e 'import("astral-core/wheel").then(m => { if (typeof m.renderSvg !== "function" || typeof m.emptyWheelData !== "function") throw new Error("wheel exports missing"); console.log("wheel entry passed") })'
+          python3 -m http.server 8123 --bind 127.0.0.1 --directory node_modules/astral-core/data/places >/tmp/astral-core-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          sleep 1
+          node --input-type=module <<'NODE'
+          const core = await import('astral-core/web');
+          const base = new URL('http://127.0.0.1:8123/');
+          const places = core.webPlaces(base);
+          const countries = await places.countries('Europe');
+          if (!countries.some(({ code }) => code === 'GB')) throw new Error('web country data unavailable');
+          const cities = await places.cities('GB', 'ABD', 'Peterhead');
+          const city = cities[0];
+          if (!city) throw new Error('web city data unavailable');
+          const ports = await core.webPorts(base, 'package-smoke');
+          const chart = await core.calc(
+            { date: '2000-01-01', time: '12:00', timeAccuracy: 'exact', placeId: city.id },
+            { zodiac: 'tropical', ayanamsha: 'lahiri' },
+            ports,
+          );
+          if (chart.system.points.sun.position.value === null) throw new Error('web calculation failed');
+          console.log('web core passed');
+          NODE
