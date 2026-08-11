@@ -1,5 +1,6 @@
+import { LocalDateTime, ZoneId } from "@js-joda/core";
+import "@js-joda/timezone";
 import { JsJodaResolver } from "./jsJoda.js";
-import { loadVendor } from "../vendor/load.js";
 import { vendorRevisions } from "../vendor/revisions.js";
 class RangeResolver {
     info;
@@ -21,11 +22,9 @@ class RangeResolver {
     }
 }
 export const loadTimeResolver = async () => {
-    const core = await loadVendor("@js-joda/core");
-    await loadVendor("@js-joda/timezone");
     const port = {
-        localDateTime: (iso) => core.LocalDateTime.parse(iso),
-        rules: (zone) => core.ZoneId.of(zone).rules(),
+        localDateTime: (iso) => LocalDateTime.parse(iso),
+        rules: (zone) => ZoneId.of(zone).rules(),
     };
     return new RangeResolver(new JsJodaResolver(port, {
         providerVersion: vendorRevisions.time.timezoneVersion,

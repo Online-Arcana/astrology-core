@@ -1,4 +1,4 @@
-import { loadVendor } from "../vendor/load.js";
+import { cscData } from "./cscData.js";
 import { normalisePlace, parsePlaceId, placeId } from "./normalise.js";
 const fold = (value) => value.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase("en-GB");
 const order = (items) => items.sort((a, b) => a.name.localeCompare(b.name, "en-GB"));
@@ -81,8 +81,5 @@ export class CscCatalogue {
         return normalisePlace(country, region, city);
     }
 }
-export const loadCscCatalogue = async () => {
-    const api = await loadVendor("@countrystatecity/countries");
-    return new CscCatalogue(api);
-};
+export const loadCscCatalogue = async () => new CscCatalogue(cscData);
 //# sourceMappingURL=csc.js.map
