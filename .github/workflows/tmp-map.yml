@@ -19,31 +19,44 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
-          root=Path('astrology/src')
-          core={'aspect','astro','calculate','compat','derived','dignity','eclipse','house','pattern','place','time','zodiac'}
+          from collections import Counter,defaultdict
+          root=Path('astrology/src').resolve()
           rx=re.compile(r'(?:from\s+|import\s*\(\s*)["\']([^"\']+)["\']')
           def resolve(p,s):
-              if not s.startswith('.'): return s
+              if not s.startswith('.'): return ('external',s)
               q=(p.parent/s).resolve()
-              try: rel=q.relative_to(root.resolve())
-              except ValueError: return s
-              return str(rel).removesuffix('.js').removesuffix('.ts')
-          edges=set()
-          files=[]
-          for d in sorted(core):
-              for p in sorted((root/d).rglob('*.ts')):
-                  files.append(p.relative_to(root))
-                  text=p.read_text()
-                  for s in rx.findall(text):
-                      r=resolve(p,s)
-                      top=r.split('/',1)[0]
-                      if top not in core and not r.startswith('.'):
-                          edges.add((str(p.relative_to(root)),r))
-          print('CORE FILES',len(files))
-          print('\nCROSS-BOUNDARY IMPORTS')
-          for a,b in sorted(edges): print(f'{a} -> {b}')
-          print('\nTOP-LEVEL COUNTS')
-          from collections import Counter
-          c=Counter(b.split('/',1)[0] for _,b in edges)
-          for k,v in sorted(c.items()): print(k,v)
+              try: rel=q.relative_to(root)
+              except ValueError: return ('outside',s)
+              s=str(rel)
+              if s.endswith('.js'): s=s[:-3]
+              if s.endswith('.ts'): s=s[:-3]
+              return ('internal',s)
+          graph=Counter()
+          details=defaultdict(set)
+          for p in sorted(root.rglob('*.ts')):
+              src=str(p.relative_to(root)).split('/',1)[0]
+              for raw in rx.findall(p.read_text()):
+                  kind,r=resolve(p,raw)
+                  if kind=='internal':
+                      dst=r.split('/',1)[0]
+                  else:
+                      dst='@'+r.split('/',1)[0]
+                  if src!=dst:
+                      graph[(src,dst)]+=1
+                      details[(src,dst)].add(str(p.relative_to(root)))
+          print('TOP-LEVEL IMPORT GRAPH')
+          for (a,b),n in sorted(graph.items()):
+              print(f'{a:16} -> {b:24} {n:3}')
+          print('\nINTERPRETER CANDIDATE CROSS EDGES')
+          interp={'interpretation','llm','billing','job','progress'}
+          for (a,b),n in sorted(graph.items()):
+              if a in interp and b not in interp:
+                  print(f'{a:16} -> {b:24} {n:3}')
+                  for f in sorted(details[(a,b)]): print('  ',f)
+          print('\nFRONTEND CROSS EDGES')
+          front={'browser'}
+          for (a,b),n in sorted(graph.items()):
+              if a in front and b not in front:
+                  print(f'{a:16} -> {b:24} {n:3}')
+                  for f in sorted(details[(a,b)]): print('  ',f)
           PY
