@@ -1,0 +1,37 @@
+name: Bootstrap shared assets
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/bootstrap-assets.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - run: |
+          git clone --depth 1 https://github.com/Online-Arcana/astrology.git /tmp/astrology
+          git clone --depth 1 https://github.com/kitty-crow/astral-identicons.git /tmp/astral-identicons
+          rm -rf assets styles reference
+          mkdir -p assets/reed-solomon styles reference
+          cp -a /tmp/astrology/public/assets/astrology-glyphs assets/astrology-glyphs
+          cp -a /tmp/astral-identicons/assets/constellations assets/constellations
+          cp /tmp/astral-identicons/assets/decor/star.svg assets/reed-solomon/star.svg
+          cp /tmp/astrology/public/chart-wheel.css styles/chart-wheel.css
+          cp /tmp/astrology/src/browser/chartWheel.ts reference/chartWheel.astrology.ts
+          cp /tmp/astrology/src/browser/chartWheelGlyphs.ts reference/chartWheelGlyphs.astrology.ts
+          printf '%s\n' \
+            'astrology=591145284610a9b53974eff9ff2bf70453f46835' \
+            'astral-identicons=f933e84095ba0c895629768250181a27cd72d249' \
+            > SOURCE_REVISIONS
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets styles reference SOURCE_REVISIONS
+          git commit -m 'Extract shared chart wheel assets'
+          git push
