@@ -9,6 +9,10 @@ export interface SvgOptions {
   aspects?: boolean;
   inner?: string;
   attrs?: Readonly<Record<string, string>>;
+  /** Orientation used when a caller deliberately renders an untimed/shell wheel. */
+  orientationDegrees?: number;
+  /** Set false when an untimed shell should stay visually empty in the centre. */
+  untimedLabel?: boolean;
 }
 const defaults: SvgTheme = { background: "#101019", ink: "#f7f3ff", muted: "#aaa1c0", line: "#6f6684", accent: "#d6c7ff" };
 const esc = (value: string): string => value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -43,7 +47,9 @@ const line = (longitude: number, from: number, to: number, asc: number, cls: str
 };
 export const renderSvg = async (data: WheelData, options: SvgOptions = {}): Promise<string> => {
   const theme={...defaults,...options.theme};
-  const ascValue=data.points.ascendant.position.value; const asc=ascValue?.longitudeDegrees ?? 180; const timed=ascValue!==null;
+  const ascValue=data.points.ascendant.position.value;
+  const timed=ascValue!==null;
+  const asc=options.orientationDegrees ?? ascValue?.longitudeDegrees ?? 180;
   const attrs=Object.entries(options.attrs ?? {}).map(([k,v])=>` data-${esc(k)}="${esc(v)}"`).join("");
   const out:string[]=[];
   out.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${wheelSize} ${wheelSize}"${attrs}>`);
@@ -57,6 +63,6 @@ export const renderSvg = async (data: WheelData, options: SvgOptions = {}): Prom
   if(options.aspects!==false) for(const aspect of data.aspects){const a=pointAnchors.get(aspect.a),b=pointAnchors.get(aspect.b);if(a===undefined||b===undefined)continue;const s=aspectSegment(aspect,a,b);out.push(`<line class="aspect" data-aspect="${esc(aspect.id)}" x1="${s.start.x.toFixed(3)}" y1="${s.start.y.toFixed(3)}" x2="${s.end.x.toFixed(3)}" y2="${s.end.y.toFixed(3)}"/>`);}
   if(options.inner!==undefined) out.push(`<g class="wheel-inner">${options.inner}</g>`);
   for(const p of placed){const point=data.points[p.id],position=point.position.value,at=pointAnchors.get(p.id);if(position===null||at===undefined)continue;const radius=wheelRadii.pointBase-p.lane*24;out.push(line(p.longitude,wheelRadii.zodiacInner-3,radius+16,asc,"leader"));out.push(line(p.longitude,wheelRadii.zodiacInner-10,wheelRadii.zodiacInner+1,asc,"tick"));const asset=assetPath(p.id);out.push(`<g class="point" data-point="${p.id}" data-anchor-x="${at.x.toFixed(3)}" data-anchor-y="${at.y.toFixed(3)}">${asset===null?`<text x="${at.x.toFixed(3)}" y="${(at.y+8).toFixed(3)}" text-anchor="middle" font-size="20">${esc(pointGlyphs[p.id]??titleCase(p.id).slice(0,2))}</text>`:await image(options.assets,asset.path,pointGlyphs[p.id]??"•",at.x,at.y,29,asset.rotation??0,asset.modifier)}</g>`);}
-  if(!timed) out.push(`<text x="400" y="400" text-anchor="middle">Birth time unknown · houses and angles are unavailable</text>`);
+  if(!timed && options.untimedLabel !== false) out.push(`<text x="400" y="400" text-anchor="middle">Birth time unknown · houses and angles are unavailable</text>`);
   out.push(`</svg>`); return out.join("");
 };
