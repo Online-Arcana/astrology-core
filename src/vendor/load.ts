@@ -1,6 +1,5 @@
 export const loadVendor = async <T>(specifier: string): Promise<T> => {
   switch (specifier) {
-    case "@countrystatecity/countries": return import("@countrystatecity/countries") as Promise<T>;
     case "@js-joda/core": return import("@js-joda/core") as Promise<T>;
     case "@js-joda/timezone": return import("@js-joda/timezone") as Promise<T>;
     case "astronomia/base": return import("astronomia/base") as Promise<T>;
