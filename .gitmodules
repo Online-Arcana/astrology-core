@@ -1,0 +1,9 @@
+[submodule "vendor/astronomy"]
+	path = vendor/astronomy
+	url = https://github.com/kitty-crow/astronomia.git
+[submodule "vendor/places"]
+	path = vendor/places
+	url = https://github.com/kitty-crow/countrystatecity.git
+[submodule "vendor/time"]
+	path = vendor/time
+	url = https://github.com/kitty-crow/ts-joda.git
