@@ -66,9 +66,12 @@ jobs:
           const places = core.webPlaces(base);
           const countries = await places.countries('Europe');
           if (!countries.some(({ code }) => code === 'GB')) throw new Error('web country data unavailable');
-          const cities = await places.cities('GB', 'ABD', 'Peterhead');
-          const city = cities[0];
-          if (!city) throw new Error('web city data unavailable');
+          const regions = await places.regions('GB');
+          const scotland = regions.find(({ name }) => name === 'Scotland');
+          if (!scotland) throw new Error('Scotland region unavailable');
+          const cities = await places.cities('GB', scotland.code, 'Peterhead');
+          const city = cities.find(({ name }) => name === 'Peterhead');
+          if (!city) throw new Error('web Peterhead data unavailable');
           const ports = await core.webPorts(base, 'package-smoke');
           const chart = await core.calc(
             { date: '2000-01-01', time: '12:00', timeAccuracy: 'exact', placeId: city.id },
