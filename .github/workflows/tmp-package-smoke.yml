@@ -1,4 +1,4 @@
-# temporary split validation
+# temporary core package validation
 name: tmp-package-smoke
 on:
   push:
