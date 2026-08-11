@@ -5,20 +5,22 @@
   "type": "module",
   "private": true,
   "license": "MIT",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "files": ["dist", "assets", "styles", "LICENSE"],
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./wheel": { "types": "./dist/wheel/index.d.ts", "default": "./dist/wheel.js" }
+  },
+  "files": ["dist", "data", "assets", "styles", "LICENSE"],
   "scripts": {
     "vendor:astronomy": "npm --prefix vendor/astronomy install && npm --prefix vendor/astronomy run build",
     "vendor:places": "npm --prefix vendor/places/packages/countries install --ignore-scripts --workspaces=false --no-audit && npm --prefix vendor/places/packages/countries run build",
     "vendor:time": "rm -rf vendor/time/packages/locales && npm --prefix vendor/time ci && npm --prefix vendor/time run build",
     "vendor:build": "npm run vendor:astronomy && npm run vendor:places && npm run vendor:time",
     "check": "tsc -p tsconfig.json --noEmit",
-    "build": "rm -rf dist && tsc -p tsconfig.json && node scripts/bundle.mjs",
+    "build": "rm -rf dist && node scripts/data.mjs && tsc -p tsconfig.json && node scripts/bundle.mjs",
     "test": "node test/core.mjs",
     "ci": "npm run check && npm run build && npm test"
   },
   "devDependencies": {
-    "@countrystatecity/countries": "file:vendor/places/packages/countries",
     "@js-joda/core": "file:vendor/time/packages/core",
     "@js-joda/timezone": "file:vendor/time/packages/timezone",
     "@types/node": "^22.15.3",
