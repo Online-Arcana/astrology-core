@@ -22,6 +22,8 @@ const radii = {
   pointBase: 286,
   aspect: 210,
 } as const;
+const identiconOverlayRadius = radii.pointBase - 14;
+const identiconOverlayClipRadius = identiconOverlayRadius + 4;
 
 const signOrder = [
   "aries", "taurus", "gemini", "cancer", "leo", "virgo",
@@ -259,7 +261,7 @@ async function pointsLayer(
       asset.modifier,
     ));
   }
-  return `<g id="wheel-points">${parts.join("")}</g>`;
+  return parts.length === 0 ? "" : `<g id="wheel-points">${parts.join("")}</g>`;
 }
 
 async function identiconOverlay(
@@ -275,9 +277,9 @@ async function identiconOverlay(
   const sourceSize = sourceRadius * 2;
   const sourceX = identiconCentre - sourceRadius;
   const sourceY = identiconCentre - sourceRadius;
-  const scale = (radii.aspect - 8) / v9InnerClipRadius;
+  const scale = identiconOverlayRadius / v9InnerClipRadius;
   const transform = `translate(${centre} ${centre}) scale(${scale.toFixed(9)}) translate(-${identiconCentre} -${identiconCentre})`;
-  return `<g id="identicon-aspect-overlay" clip-path="url(#identicon-aspect-clip)">
+  return `<g id="identicon-aspect-overlay" data-overlay-radius="${identiconOverlayRadius}" clip-path="url(#identicon-aspect-clip)">
     <g transform="${transform}">
       <g id="solar-constellation" data-recognition-role="solar-constellation" data-sign="${request.input.solar}" opacity="0.6">
         ${nestedSvg(constellationBody, constellation.viewBox, sourceX, sourceY, sourceSize, sourceSize)}
@@ -302,9 +304,9 @@ export async function renderAstralIdenticonV10(
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${canvas}" height="${canvas}" viewBox="0 0 ${canvas} ${canvas}" role="img" aria-label="${escapeXml(title)}" data-input="${escapeXml(JSON.stringify(request.input))}" data-palette-index="${request.paletteIndex}" data-code-version="${request.recordVersion}" data-visual-version="10" data-scannable="v10" data-identity-hex="${request.identityHex}">
   <title>${escapeXml(title)}</title>
-  <metadata>Astral chart identicon visual contract v10. The deterministic natal chart wheel supplies the zodiac, selected houses and real chart points. Aspect lines are deliberately omitted. The aspect area contains only the Solar constellation artwork and the one hundred and twenty-eight RS(168,40) parity stars. The former encoded planetary glyphs, satellites, literal six-sign grid and separate identicon zodiac ring are not rendered.</metadata>
+  <metadata>Astral chart identicon visual contract v10. The deterministic natal chart wheel supplies the zodiac, selected houses and real chart points. Aspect lines are deliberately omitted. The Solar constellation artwork and the one hundred and twenty-eight RS(168,40) parity stars expand through the normal aspect-line field beneath the chart glyph layer. The former encoded planetary glyphs, satellites, literal six-sign grid and separate identicon zodiac ring are not rendered.</metadata>
   <defs>
-    <clipPath id="identicon-aspect-clip"><circle cx="${centre}" cy="${centre}" r="${radii.aspect - 4}"/></clipPath>
+    <clipPath id="identicon-aspect-clip"><circle cx="${centre}" cy="${centre}" r="${identiconOverlayClipRadius}"/></clipPath>
   </defs>
   <rect id="background" x="0" y="0" width="${canvas}" height="${canvas}" fill="${request.palette.background}"/>
   <circle id="wheel-frame" cx="${centre}" cy="${centre}" r="${radii.outer}" fill="${request.palette.background}" stroke="${request.palette.layer1}" stroke-opacity="0.62" stroke-width="2"/>
