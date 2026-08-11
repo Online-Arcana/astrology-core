@@ -7,7 +7,7 @@ export interface AstralIdenticonAssetSource {
   constellation(sign: Sign): Promise<string>;
   sigil(sign: Sign): Promise<string>;
   star(): Promise<string>;
-  astrologyGlyph(path: string): Promise<string>;
+  astrologyGlyph?(path: string): Promise<string>;
 }
 export interface AstralIdenticonPalette { background: string; layer0: string; layer1: string; }
 export interface AstralIdenticonTracedGlyph {
