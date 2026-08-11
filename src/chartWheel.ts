@@ -1,5 +1,4 @@
-import type { Aspect, PointId, Sign } from "../types/astro.js";
-import type { AstralCalculation } from "../types/file.js";
+import type { Aspect, ChartWheelCalculation, PointId, Sign } from "./types.js";
 
 const svgNamespace = "http://www.w3.org/2000/svg";
 const size = 800;
@@ -206,7 +205,7 @@ interface PlacedPoint {
   lane: number;
 }
 
-const pointLayout = (calculation: AstralCalculation): PlacedPoint[] => {
+const pointLayout = (calculation: ChartWheelCalculation): PlacedPoint[] => {
   const points = Object.entries(calculation.system.points)
     .flatMap(([rawId, point]) => point.position.value === null
       ? []
@@ -280,7 +279,7 @@ const setSegment = (
   element.setAttribute("y2", segment.end.y.toFixed(3));
 };
 
-export const renderChartWheel = (calculation: AstralCalculation): HTMLElement => {
+export const renderChartWheel = (calculation: ChartWheelCalculation): HTMLElement => {
   const container = document.createElement("section");
   container.className = "chart-wheel";
   container.dataset["fingerprint"] = calculation.provenance.calculationFingerprint;
