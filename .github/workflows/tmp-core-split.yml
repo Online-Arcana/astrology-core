@@ -1,0 +1,309 @@
+name: tmp-core-split
+on:
+  push:
+    branches: [agent/split-modules]
+    paths: [.github/workflows/tmp-core-split.yml]
+permissions:
+  contents: write
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/split-modules
+          fetch-depth: 0
+      - uses: actions/checkout@v5
+        with:
+          repository: Online-Arcana/astrology
+          ref: 86fadaebccb497930f6a38a4a8f5c4c15b2c2ff6
+          path: _astrology
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Build core tree
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wheel-src
+          cp -a src /tmp/wheel-src
+          rm -rf src dist test vendor package-lock.json
+          mkdir -p src/types src/vendor src/hash src/wheel
+          for d in aspect astro compat derived dignity eclipse house pattern place rules time zodiac; do
+            cp -a "_astrology/src/$d" "src/$d"
+          done
+          cp _astrology/src/types/base.ts src/types/base.ts
+          cp _astrology/src/types/astro.ts src/types/astro.ts
+          cp _astrology/src/vendor/load.ts src/vendor/load.ts
+          cp _astrology/src/vendor/revisions.ts src/vendor/revisions.ts
+          cat > src/types/calc.ts <<'TS'
+          import type { Ayanamsha, AstronomyData, CompatibilityMatrix, Zodiac, ZodiacCalculation } from "./astro.js";
+          import type { BirthData, JsonRef, PlaceData, TimeData } from "./base.js";
+
+          export interface CalcSettings {
+            primaryZodiac: Zodiac;
+            siderealAyanamsha: Ayanamsha | null;
+            primaryHouseSystem: "placidus";
+            polarFallback: "porphyry";
+            houseSystems: ["placidus", "whole_sign", "equal", "porphyry"];
+          }
+
+          export interface CalcProvenance {
+            generatedAt: string;
+            coreVersion: string;
+            astronomia: { repository: string; revision: string; version: string };
+            places: { repository: string; revision: string; version: string };
+            time: {
+              repository: string;
+              revision: string;
+              version: string;
+              timeZoneDatabaseVersion: string;
+              calendar: "proleptic_gregorian";
+              supportedRange: string;
+            };
+            astrologyProfile: string;
+            aspectProfile: string;
+            dignityProfile: string;
+            compatibilityProfile: string;
+            calculationFingerprint: string;
+          }
+
+          export interface CalcWarning {
+            code: string;
+            message: string;
+            sourceRefs: JsonRef[];
+          }
+
+          export interface Calculation {
+            schema: "astral-core/1.0.0";
+            birth: BirthData;
+            place: PlaceData;
+            time: TimeData;
+            settings: CalcSettings;
+            astronomy: AstronomyData;
+            system: ZodiacCalculation;
+            compatibility: CompatibilityMatrix & {
+              method: "natal_to_sign_archetype";
+              profile: "western_compatibility/1.0.0";
+            };
+            provenance: CalcProvenance;
+            warnings: CalcWarning[];
+          }
+          TS
+          cat > src/types/index.ts <<'TS'
+          export * from "./base.js";
+          export * from "./astro.js";
+          export * from "./calc.js";
+          TS
+          cat > src/hash/canonical.ts <<'TS'
+          import type { Json } from "../types/base.js";
+
+          const fail = (kind: string): never => { throw new TypeError(`Value is not canonical JSON: ${kind}`); };
+          const writeObject = (value: object): string => {
+            const proto = Object.getPrototypeOf(value) as object | null;
+            if (proto !== Object.prototype && proto !== null) return fail("non-plain object");
+            const record = value as Record<string, unknown>;
+            return `{${Object.keys(record).sort().map((key) => {
+              const item = record[key];
+              if (item === undefined) return fail("undefined property");
+              return `${JSON.stringify(key)}:${write(item)}`;
+            }).join(",")}}`;
+          };
+          const write = (value: unknown): string => {
+            if (value === null) return "null";
+            if (typeof value === "boolean" || typeof value === "string") return JSON.stringify(value);
+            if (typeof value === "number") {
+              if (!Number.isFinite(value)) return fail("non-finite number");
+              return JSON.stringify(value);
+            }
+            if (Array.isArray(value)) return `[${value.map(write).join(",")}]`;
+            if (typeof value === "object") return writeObject(value);
+            return fail(typeof value);
+          };
+          export const canonical = (value: Json | object): string => write(value);
+          export const canonicalBytes = (value: Json | object): Uint8Array => new TextEncoder().encode(canonical(value));
+          TS
+          cat > src/hash/digest.ts <<'TS'
+          const hex = (bytes: Uint8Array): string => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+          export const digest = async (algorithm: "SHA-256" | "SHA-512", bytes: Uint8Array): Promise<string> =>
+            hex(new Uint8Array(await crypto.subtle.digest(algorithm, bytes.slice().buffer)));
+          TS
+          mkdir -p src/calculate
+          cp _astrology/src/calculate/service.ts /tmp/service.ts
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/service.ts')
+          s=p.read_text()
+          # Imports and types owned outside core.
+          s=s.replace('import type { Config } from "../config.js";\n','')
+          s=s.replace('import { canonicalBytes } from "../file/canonical.js";\n','import { canonicalBytes } from "../hash/canonical.js";\n')
+          s=s.replace('import { digest } from "../file/hash.js";\n','import { digest } from "../hash/digest.js";\n')
+          s=s.replace('  preferredGenderOf,\n','')
+          s=s.replace('import type { AstralCalculation, CalculationWarning, InterpretationPlan } from "../types/file.js";\n','import type { Calculation, CalcWarning } from "../types/calc.js";\n')
+          s=s.replace('import { buildInterpretationPlan } from "./plan.js";\n','')
+          # Short core API names and options.
+          s=s.replace('export interface CalculationOptions {\n  primaryZodiac: Zodiac;\n  ayanamsha: Ayanamsha;\n  interpretationMode: Zodiac;\n}', 'export interface CalcOptions {\n  zodiac: Zodiac;\n  ayanamsha: Ayanamsha;\n}')
+          s=s.replace('export interface CalculationPorts {', 'export interface CalcPorts {')
+          start=s.find('const optionsFromConfig =')
+          end=s.find('const timeState =', start)
+          if start < 0 or end < 0: raise SystemExit('options block not found')
+          s=s[:start] + 'const selectedZodiac = (options: CalcOptions): Zodiac => options.zodiac;\n\n' + s[end:]
+          s=s.replace('CalculationWarning[]', 'CalcWarning[]')
+          s=s.replace('CalculationUnavailableError', 'CalcError')
+          # Extract the existing method body and turn it into a plain function.
+          cls=s.find('export class CalculationService')
+          method=s.find('  async calculate(', cls)
+          brace=s.find('{', method)
+          depth=0; close=None
+          for i in range(brace, len(s)):
+            if s[i]=='{': depth+=1
+            elif s[i]=='}':
+              depth-=1
+              if depth==0:
+                close=i; break
+          if cls < 0 or method < 0 or close is None: raise SystemExit('calculation method not found')
+          body=s[brace+1:close].replace('this.#ports','ports')
+          body=body.replace('options.primaryZodiac','options.zodiac').replace('options.interpretationMode','options.zodiac')
+          # Remove the interpreter-owned plan and subject fields from the deterministic result.
+          body=body.replace('    const interpretationPlan: InterpretationPlan = buildInterpretationPlan(system);\n','')
+          body=body.replace('      interpretationMode: zodiac,\n','')
+          old='''    const core = {\n      schema: "astral-calculation/1.1.0" as const,\n      subject: {\n        providedName: input.name?.trim() || null,\n        language: input.lang?.trim() || "en",\n        adult: true as const,\n        preferredGender: preferredGenderOf(input),\n      },\n      birth: { date: input.date, time: input.time, timeAccuracy: input.timeAccuracy },\n      place,\n      time,\n      settings,\n      astronomy,\n      system,\n      compatibility,\n      interpretationPlan,\n      warnings: warningValues,\n    };'''
+          new='''    const core = {\n      schema: "astral-core/1.0.0" as const,\n      birth: { date: input.date, time: input.time, timeAccuracy: input.timeAccuracy },\n      place,\n      time,\n      settings,\n      astronomy,\n      system,\n      compatibility,\n      warnings: warningValues,\n    };'''
+          if old not in body: raise SystemExit('core result block not found')
+          body=body.replace(old,new)
+          body=body.replace('        astralChartsVersion: ports.version,','        coreVersion: ports.version,')
+          prefix=s[:cls]
+          # Drop legacy class/load-service tail and expose concise functions.
+          load_start=s.find('export const loadCalculationPorts', close)
+          if load_start < 0: raise SystemExit('load ports not found')
+          load=s[load_start:]
+          load=load.replace('loadCalculationPorts','loadPorts').replace('Promise<CalculationPorts>','Promise<CalcPorts>')
+          cut=load.find('export const loadCalculationService')
+          if cut >= 0: load=load[:cut]
+          fn='export const calc = async (input: BirthInput, options: CalcOptions, ports: CalcPorts): Promise<Calculation> => {'+body+'\n};\n\n'
+          Path('src/calculate/calc.ts').write_text(prefix+fn+load)
+          PY
+          # Wheel source is retained but grouped under one concern. The old renderer types become projections of core types.
+          cp /tmp/wheel-src/chartWheel.ts src/wheel/render.ts
+          cp /tmp/wheel-src/chartWheelGlyphs.ts src/wheel/glyphs.ts
+          cp /tmp/wheel-src/chartWheelVisibility.ts src/wheel/visibility.ts
+          cp /tmp/wheel-src/publicWheel.ts src/wheel/public.ts
+          cat > src/wheel/types.ts <<'TS'
+          import type { Calculation } from "../types/calc.js";
+          export type { AngleId, Aspect, AspectKind, HouseSystem, LotId, NodeId, OtherPointId, PlanetId, PointId, Sign } from "../types/astro.js";
+          export type WheelCalculation = Pick<Calculation, "provenance" | "settings" | "system">;
+          TS
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/wheel/render.ts'); s=p.read_text().replace('"./types.js"','"./types.js"').replace('ChartWheelCalculation','WheelCalculation').replace('renderChartWheel','renderWheel'); p.write_text(s)
+          p=Path('src/wheel/public.ts'); s=p.read_text().replace('"./chartWheel.js"','"./render.js"').replace('renderChartWheel','renderWheel').replace('ChartWheelCalculation','WheelCalculation').replace('chartWheelCalculationFromPublicMeta','wheelFromPublic').replace('renderPublicChartWheel','renderPublicWheel'); p.write_text(s)
+          p=Path('src/wheel/glyphs.ts'); s=p.read_text(); p.write_text(s)
+          p=Path('src/wheel/visibility.ts'); s=p.read_text(); p.write_text(s)
+          PY
+          cat > src/index.ts <<'TS'
+          export * from "./types/index.js";
+          export * from "./calculate/calc.js";
+          export * from "./place/model.js";
+          export * from "./place/csc.js";
+          export * from "./time/model.js";
+          export * from "./time/calculate.js";
+          export * from "./zodiac/position.js";
+          export * from "./zodiac/ayanamsha.js";
+          export * from "./wheel/render.js";
+          export * from "./wheel/glyphs.js";
+          export * from "./wheel/visibility.js";
+          export * from "./wheel/public.js";
+          export * from "./hash/canonical.js";
+          export * from "./hash/digest.js";
+          TS
+          cat > package.json <<'JSON'
+          {
+            "name": "astral-core",
+            "version": "0.1.0",
+            "description": "Deterministic astrology calculation and chart-wheel rendering",
+            "type": "module",
+            "private": true,
+            "license": "MIT",
+            "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+            "files": ["dist", "assets", "styles", "LICENSE"],
+            "scripts": {
+              "vendor:astronomy": "npm --prefix vendor/astronomy install && npm --prefix vendor/astronomy run build",
+              "vendor:places": "npm --prefix vendor/places/packages/countries install --ignore-scripts --workspaces=false --no-audit && npm --prefix vendor/places/packages/countries run build",
+              "vendor:time": "rm -rf vendor/time/packages/locales && npm --prefix vendor/time ci && npm --prefix vendor/time run build",
+              "vendor:build": "npm run vendor:astronomy && npm run vendor:places && npm run vendor:time",
+              "check": "tsc -p tsconfig.json --noEmit",
+              "build": "rm -rf dist && tsc -p tsconfig.json",
+              "ci": "npm run check && npm run build"
+            },
+            "dependencies": {
+              "@countrystatecity/countries": "file:vendor/places/packages/countries",
+              "@js-joda/core": "file:vendor/time/packages/core",
+              "@js-joda/timezone": "file:vendor/time/packages/timezone",
+              "astronomia": "file:vendor/astronomy"
+            },
+            "devDependencies": { "@types/node": "^22.15.3", "typescript": "5.9.3" }
+          }
+          JSON
+          cat > README.md <<'MD'
+          # astral-core
+
+          Deterministic astrology calculation and chart-wheel rendering.
+
+          ## Structure
+
+          - `src/astro/` planetary and lunar astronomy adapters and calculations
+          - `src/time/` civil-time and timezone resolution
+          - `src/place/` place catalogue adapter
+          - `src/zodiac/` zodiac positions and ayanamsha
+          - `src/house/` angles and house calculations
+          - `src/aspect/` aspect catalogue and detection
+          - `src/dignity/` dignity rules and calculation
+          - `src/derived/` derived chart values
+          - `src/pattern/` aspect-pattern detection
+          - `src/compat/` deterministic compatibility calculation
+          - `src/eclipse/` eclipse calculation
+          - `src/calculate/` complete deterministic chart calculation
+          - `src/wheel/` chart-wheel geometry and rendering
+          - `src/types/` public calculation types
+          - `src/hash/` deterministic fingerprint primitives
+          - `vendor/astronomy/` Astronomia
+          - `vendor/time/` ts-joda
+          - `vendor/places/` countrystatecity
+
+          ## API
+
+          `calc(input, options, ports)` returns a deterministic `Calculation`.
+
+          `loadPorts(version)` loads the three vendored runtime adapters.
+
+          `renderWheel(calculation)` renders the browser chart wheel.
+
+          `renderPublicWheel(meta)` renders a wheel from public wheel metadata.
+          MD
+          cat > .gitmodules <<'EOF'
+          [submodule "vendor/astronomy"]
+            path = vendor/astronomy
+            url = https://github.com/kitty-crow/astronomia.git
+          [submodule "vendor/places"]
+            path = vendor/places
+            url = https://github.com/kitty-crow/countrystatecity.git
+          [submodule "vendor/time"]
+            path = vendor/time
+            url = https://github.com/kitty-crow/ts-joda.git
+          EOF
+          git rm -r --cached vendor >/dev/null 2>&1 || true
+          rm -rf vendor
+          git submodule add -f https://github.com/kitty-crow/astronomia.git vendor/astronomy
+          git submodule add -f https://github.com/kitty-crow/countrystatecity.git vendor/places
+          git submodule add -f https://github.com/kitty-crow/ts-joda.git vendor/time
+          git -C vendor/astronomy fetch origin ed1064049979b68abb3ff0a7812f5ee4fc04caec && git -C vendor/astronomy checkout ed1064049979b68abb3ff0a7812f5ee4fc04caec
+          git -C vendor/places fetch origin eaba6b0028b9632d2e2fec9a4a1b78ce3336479d && git -C vendor/places checkout eaba6b0028b9632d2e2fec9a4a1b78ce3336479d
+          git -C vendor/time fetch origin 96828b6097da77b2de38171dfd1bf92c0df7edc7 && git -C vendor/time checkout 96828b6097da77b2de38171dfd1bf92c0df7edc7
+          npm run vendor:build
+          npm install --ignore-scripts
+          npm run check
+          npm run build
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Split deterministic astrology into astral-core"
+          git push origin HEAD:agent/split-modules
