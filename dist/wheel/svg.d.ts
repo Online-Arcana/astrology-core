@@ -15,6 +15,10 @@ export interface SvgOptions {
     aspects?: boolean;
     inner?: string;
     attrs?: Readonly<Record<string, string>>;
+    /** Orientation used when a caller deliberately renders an untimed/shell wheel. */
+    orientationDegrees?: number;
+    /** Set false when an untimed shell should stay visually empty in the centre. */
+    untimedLabel?: boolean;
 }
 export declare const renderSvg: (data: WheelData, options?: SvgOptions) => Promise<string>;
 //# sourceMappingURL=svg.d.ts.map

@@ -40,8 +40,8 @@ const line = (longitude, from, to, asc, cls) => {
 export const renderSvg = async (data, options = {}) => {
     const theme = { ...defaults, ...options.theme };
     const ascValue = data.points.ascendant.position.value;
-    const asc = ascValue?.longitudeDegrees ?? 180;
     const timed = ascValue !== null;
+    const asc = options.orientationDegrees ?? ascValue?.longitudeDegrees ?? 180;
     const attrs = Object.entries(options.attrs ?? {}).map(([k, v]) => ` data-${esc(k)}="${esc(v)}"`).join("");
     const out = [];
     out.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${wheelSize} ${wheelSize}"${attrs}>`);
@@ -90,7 +90,7 @@ export const renderSvg = async (data, options = {}) => {
         const asset = assetPath(p.id);
         out.push(`<g class="point" data-point="${p.id}" data-anchor-x="${at.x.toFixed(3)}" data-anchor-y="${at.y.toFixed(3)}">${asset === null ? `<text x="${at.x.toFixed(3)}" y="${(at.y + 8).toFixed(3)}" text-anchor="middle" font-size="20">${esc(pointGlyphs[p.id] ?? titleCase(p.id).slice(0, 2))}</text>` : await image(options.assets, asset.path, pointGlyphs[p.id] ?? "•", at.x, at.y, 29, asset.rotation ?? 0, asset.modifier)}</g>`);
     }
-    if (!timed)
+    if (!timed && options.untimedLabel !== false)
         out.push(`<text x="400" y="400" text-anchor="middle">Birth time unknown · houses and angles are unavailable</text>`);
     out.push(`</svg>`);
     return out.join("");
