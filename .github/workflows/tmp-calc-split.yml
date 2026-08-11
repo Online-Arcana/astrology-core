@@ -1,0 +1,169 @@
+name: tmp-calc-split
+on:
+  push:
+    branches: [agent/split-modules]
+    paths: [.github/workflows/tmp-calc-split.yml]
+permissions:
+  contents: write
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: agent/split-modules
+          submodules: recursive
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Split calculation concern
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/calculate/calc.ts')
+          source = path.read_text()
+
+          def part(start, end=None):
+              a = source.index(start)
+              b = len(source) if end is None else source.index(end, a)
+              return source[a:b].strip() + '\n'
+
+          types = '''import type { AstronomyPort, LunarOrbitPort } from "../astro/port.js";
+          import type { EclipsePort } from "../eclipse/port.js";
+          import type { PlaceCatalogue } from "../place/model.js";
+          import type { TimeResolver } from "../time/model.js";
+          import type { CalcReason, CalcStatus } from "../types/base.js";
+          import type { Ayanamsha, Zodiac } from "../types/astro.js";
+
+          export const calculationProfile = "western_natal/1.1.0" as const;
+          export type TimedStatus = Extract<CalcStatus, "exact" | "approximate" | "bounded">;
+
+          export interface CalcOptions {
+            zodiac: Zodiac;
+            ayanamsha: Ayanamsha;
+          }
+
+          export interface CalcPorts {
+            places: Pick<PlaceCatalogue, "get">;
+            timeResolver: TimeResolver;
+            astronomy: AstronomyPort;
+            lunarOrbit: LunarOrbitPort;
+            eclipses: EclipsePort;
+            version: string;
+            now(): string;
+          }
+
+          export interface TimedState {
+            julianEphemerisDay: number;
+            status: TimedStatus;
+            reason: CalcReason;
+          }
+
+          export class CalcError extends Error {
+            readonly reason: CalcReason;
+
+            constructor(reason: CalcReason) {
+              super(`Chart calculation is unavailable: ${reason}`);
+              this.name = "CalcError";
+              this.reason = reason;
+            }
+          }
+          '''.replace('          ', '')
+
+          early = part('const ref =', 'const speed =')
+          for name in ['calculated', 'selectedZodiac', 'timeState', 'angleState', 'houseState']:
+              early = early.replace(f'const {name}', f'export const {name}', 1)
+          lunar = part('const lunarPhaseUnavailable', 'const zodiacCalculation')
+          lunar = lunar.replace('const calculateLunarPhase', 'export const calculateLunarPhase', 1)
+          finish = part('const warnings =', 'export const calc =')
+          for name in ['warnings', 'fingerprint']:
+              finish = finish.replace(f'const {name}', f'export const {name}', 1)
+          state = '''import { lunarPhase } from "../astro/lunar.js";
+          import type { AstronomyPort } from "../astro/port.js";
+          import { canonicalBytes } from "../hash/canonical.js";
+          import { digest } from "../hash/digest.js";
+          import { auxiliaryAngles, coreAngles, type AuxiliaryAngles, type CoreAngles } from "../house/angles.js";
+          import { calculateHouseCharts, unavailableHouseCharts } from "../house/chart.js";
+          import type { BirthInput, Calc, CalcReason, JsonRef, TimeData } from "../types/base.js";
+          import type { AstronomyData, LunarPhase, Zodiac, ZodiacCalculation } from "../types/astro.js";
+          import type { CalcWarning } from "../types/calc.js";
+          import { CalcError, type CalcOptions, type TimedState, type TimedStatus } from "./types.js";
+
+          '''.replace('          ', '') + early + '\n' + lunar + '\n' + finish
+
+          prelude = part('const planets =', 'type TimedStatus')
+          prelude = prelude.replace('const planets', 'export const planets', 1)
+          middle = part('const speed =', 'const lunarPhaseUnavailable')
+          zodiac = part('const zodiacCalculation', 'const warnings =')
+          zodiac = zodiac.replace('const zodiacCalculation', 'export const zodiacCalculation', 1)
+          system = '''import { calculateLots } from "../astro/lots.js";
+          import type { LunarOrbitSample } from "../astro/port.js";
+          import { detectDeclinationAspects } from "../aspect/declination.js";
+          import { detectAspects, type AspectPoint } from "../aspect/detect.js";
+          import { calculateDerived } from "../derived/calculate.js";
+          import { calculateEclipses } from "../eclipse/calculate.js";
+          import { unavailableHouseCharts } from "../house/chart.js";
+          import { detectPatterns, type PatternPoint } from "../pattern/detect.js";
+          import type { Calc } from "../types/base.js";
+          import type { Ayanamsha, AstrologicalPoint, AstronomyData, PlanetId, PointId, PointMap, Zodiac, ZodiacCalculation } from "../types/astro.js";
+          import { buildPoints } from "../zodiac/points.js";
+          import { calculateLunarPhase, calculated } from "./state.js";
+          import type { TimedState } from "./types.js";
+
+          '''.replace('          ', '') + prelude + '\n' + middle + '\n' + zodiac
+
+          main = part('export const calc =')
+          main_header = '''import { calculateAstronomy } from "../astro/calculate.js";
+          import { loadAstronomia } from "../astro/astronomia.js";
+          import { loadLunarOrbit } from "../astro/lunarOrbit.js";
+          import { calculateLots } from "../astro/lots.js";
+          import { calculateSect } from "../astro/sect.js";
+          import { aspectProfile } from "../aspect/catalogue.js";
+          import { calculateCompatibility } from "../compat/calculate.js";
+          import { compatibilityProfile } from "../compat/rank.js";
+          import { dignityProfile } from "../dignity/catalogue.js";
+          import { calculateEclipses } from "../eclipse/calculate.js";
+          import { loadEclipses } from "../eclipse/astronomia.js";
+          import { loadCscCatalogue } from "../place/csc.js";
+          import { resolveBirthTime } from "../time/calculate.js";
+          import { loadTimeResolver } from "../time/vendor.js";
+          import type { BirthInput } from "../types/base.js";
+          import type { Calculation } from "../types/calc.js";
+          import { vendorRevisions } from "../vendor/revisions.js";
+          import { ayanamshaDegrees } from "../zodiac/ayanamsha.js";
+          import { angleState, calculated, fingerprint, houseState, selectedZodiac, timeState, warnings } from "./state.js";
+          import { planets, zodiacCalculation } from "./system.js";
+          import { CalcError, calculationProfile, type CalcOptions, type CalcPorts } from "./types.js";
+
+          export { CalcError, calculationProfile } from "./types.js";
+          export type { CalcOptions, CalcPorts } from "./types.js";
+
+          '''.replace('          ', '')
+
+          Path('src/calculate/types.ts').write_text(types)
+          Path('src/calculate/state.ts').write_text(state)
+          Path('src/calculate/system.ts').write_text(system)
+          path.write_text(main_header + main)
+          PY
+          npm run vendor:build
+          npm install --package-lock-only --ignore-scripts
+          npm install --ignore-scripts
+          npm run check
+          npm run build
+          npm test
+          rm -rf /tmp/astral-core-consumer
+          mkdir -p /tmp/astral-core-consumer
+          npm pack --pack-destination /tmp/astral-core-consumer >/dev/null
+          cd /tmp/astral-core-consumer
+          printf '{"name":"core-consumer","private":true,"type":"module"}\n' > package.json
+          npm install ./astral-core-0.1.0.tgz --ignore-scripts >/dev/null
+          node -e 'import("astral-core").then(async m => { const time = await m.loadTimeResolver(); const value = time.resolve({date:"2000-01-01",time:"12:00:00",zone:"Europe/London"}); if(value.kind!=="exact") throw new Error(JSON.stringify(value)); await m.loadPorts("split-test"); console.log("core split package passed") })'
+          cd "$GITHUB_WORKSPACE"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/calculate package-lock.json
+          git add -f dist
+          git commit -m "Split calculation by concern"
+          git push origin HEAD:agent/split-modules
