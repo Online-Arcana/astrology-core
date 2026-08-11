@@ -17,6 +17,7 @@ jobs:
         with:
           node-version: 22
       - run: npm run vendor:build
+      - run: npm install --package-lock-only --ignore-scripts
       - run: npm install --ignore-scripts
       - run: npm run check
       - run: npm run build
@@ -28,10 +29,10 @@ jobs:
           mkdir -p /tmp/astral-core-consumer
           npm pack --pack-destination /tmp/astral-core-consumer
           tar -tzf /tmp/astral-core-consumer/astral-core-0.1.0.tgz > /tmp/astral-core-package.txt
-          grep -q 'package/vendor/astronomy/package.json' /tmp/astral-core-package.txt
-          grep -q 'package/vendor/places/packages/countries/package.json' /tmp/astral-core-package.txt
-          grep -q 'package/vendor/time/packages/core/package.json' /tmp/astral-core-package.txt
-          grep -q 'package/vendor/time/packages/timezone/package.json' /tmp/astral-core-package.txt
+          if grep -q '^package/vendor/' /tmp/astral-core-package.txt; then
+            echo 'vendor source leaked into packed core' >&2
+            exit 1
+          fi
           cd /tmp/astral-core-consumer
           printf '{"name":"core-consumer","private":true,"type":"module"}\n' > package.json
           npm install ./astral-core-0.1.0.tgz --ignore-scripts
