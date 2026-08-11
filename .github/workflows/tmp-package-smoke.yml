@@ -25,9 +25,10 @@ jobs:
           set -euo pipefail
           mkdir -p /tmp/astral-core-consumer
           npm pack --pack-destination /tmp/astral-core-consumer
-          tar -tzf /tmp/astral-core-consumer/astral-core-0.1.0.tgz | grep -q 'package/node_modules/astronomia/package.json'
-          tar -tzf /tmp/astral-core-consumer/astral-core-0.1.0.tgz | grep -q 'package/node_modules/@countrystatecity/countries/package.json'
-          if tar -tzf /tmp/astral-core-consumer/astral-core-0.1.0.tgz | grep -q '^package/vendor/'; then
+          tar -tzf /tmp/astral-core-consumer/astral-core-0.1.0.tgz > /tmp/astral-core-package.txt
+          grep -q 'package/node_modules/astronomia/package.json' /tmp/astral-core-package.txt
+          grep -q 'package/node_modules/@countrystatecity/countries/package.json' /tmp/astral-core-package.txt
+          if grep -q '^package/vendor/' /tmp/astral-core-package.txt; then
             echo 'vendor source leaked into packed core' >&2
             exit 1
           fi
