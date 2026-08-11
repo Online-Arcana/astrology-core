@@ -6,12 +6,15 @@
   "private": true,
   "license": "MIT",
   "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "files": ["dist", "assets", "styles", "LICENSE"],
-  "bundleDependencies": [
-    "@countrystatecity/countries",
-    "@js-joda/core",
-    "@js-joda/timezone",
-    "astronomia"
+  "files": [
+    "dist",
+    "assets",
+    "styles",
+    "LICENSE",
+    "vendor/astronomy",
+    "vendor/places/packages/countries",
+    "vendor/time/packages/core",
+    "vendor/time/packages/timezone"
   ],
   "scripts": {
     "vendor:astronomy": "npm --prefix vendor/astronomy install && npm --prefix vendor/astronomy run build",
