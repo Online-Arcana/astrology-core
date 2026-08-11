@@ -16,6 +16,7 @@ export type {
 export {
   renderAstralIdenticonV8,
   renderAstralIdenticonV9,
+  renderAstralIdenticonV10,
 } from "./identiconWheel.js";
 export type {
   AstralIdenticonAssetSource,
@@ -27,6 +28,7 @@ export type {
   AstralIdenticonV8RecoveryStar,
   AstralIdenticonV8Request,
   AstralIdenticonV9Request,
+  AstralIdenticonV10Request,
 } from "./identiconWheel.js";
 export {
   chartWheelCalculationFromPublicMeta,
