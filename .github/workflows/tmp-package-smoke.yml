@@ -17,13 +17,21 @@ jobs:
           node-version: 22
       - run: npm run vendor:build
       - run: npm install --ignore-scripts
+      - run: npm run check
       - run: npm run build
+      - run: npm test
       - name: Install packed core in an empty consumer
         run: |
           set -euo pipefail
           mkdir -p /tmp/astral-core-consumer
           npm pack --pack-destination /tmp/astral-core-consumer
+          tar -tzf /tmp/astral-core-consumer/astral-core-0.1.0.tgz | grep -q 'package/node_modules/astronomia/package.json'
+          tar -tzf /tmp/astral-core-consumer/astral-core-0.1.0.tgz | grep -q 'package/node_modules/@countrystatecity/countries/package.json'
+          if tar -tzf /tmp/astral-core-consumer/astral-core-0.1.0.tgz | grep -q '^package/vendor/'; then
+            echo 'vendor source leaked into packed core' >&2
+            exit 1
+          fi
           cd /tmp/astral-core-consumer
           printf '{"name":"core-consumer","private":true,"type":"module"}\n' > package.json
           npm install ./astral-core-0.1.0.tgz --ignore-scripts
-          node -e 'import("astral-core").then(m => { if (typeof m.renderSvg !== "function") throw new Error("renderSvg export missing"); console.log("packed astral-core import passed") })'
+          node -e 'import("astral-core").then(m => { if (typeof m.renderSvg !== "function") throw new Error("renderSvg export missing"); if (typeof m.emptyWheelData !== "function") throw new Error("emptyWheelData export missing"); console.log("bundled astral-core import passed") })'
