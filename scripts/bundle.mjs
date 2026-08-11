@@ -1,5 +1,10 @@
 import { build } from "esbuild";
 
+const aliases = {
+  "@js-joda/core": "./vendor/time/packages/core/dist/js-joda.esm.js",
+  "@js-joda/timezone": "./vendor/time/packages/timezone/dist/js-joda-timezone.esm.js",
+};
+
 await build({
   entryPoints: ["src/index.ts"],
   outfile: "dist/index.js",
@@ -8,6 +13,7 @@ await build({
   platform: "node",
   target: "node22",
   mainFields: ["module", "main"],
+  alias: aliases,
   sourcemap: true,
   logLevel: "info",
 });
