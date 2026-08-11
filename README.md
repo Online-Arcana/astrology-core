@@ -2,13 +2,36 @@
 
 Shared deterministic SVG chart-wheel rendering components for Online Arcana projects.
 
-`astral-chart-wheel` owns the visual wheel renderer and reusable visual identity pieces shared by `Online-Arcana/astrology` and `Online-Arcana/astral-identicons`. It does not calculate astronomical positions and it does not encode identity data.
+`astral-chart-wheel` owns the visual wheel renderer and reusable visual identity pieces shared by `Online-Arcana/astrology` and `Online-Arcana/astral-identicons`. It does not calculate astronomical positions and it does not decide what either consumer conceptually includes.
 
-## First extraction contract
+## Behaviour-preserving rendering contract
 
-The initial extraction is deliberately behaviour-preserving. The natal renderer is the existing `Online-Arcana/astrology` chart-wheel implementation with only its TypeScript input imports replaced by the structural `ChartWheelCalculation` contract in this package. Its geometry, DOM structure, classes, collision lanes, aspect rendering, glyph selection and browser behaviour are unchanged.
+The extraction is deliberately behaviour-preserving. The natal renderer is the existing `Online-Arcana/astrology` chart-wheel implementation with only its TypeScript input imports replaced by the structural `ChartWheelCalculation` contract in this package. Its geometry, DOM structure, classes, collision lanes, aspect rendering, glyph selection and browser behaviour remain unchanged.
+
+`setChartWheelPointVisibility()` and `setChartWheelPointsVisibility()` are additive visibility helpers. They hide or show an already-rendered point group and update its focusability. They do not recalculate the wheel, move collision lanes, alter leaders or ticks, or change aspect-line geometry.
 
 The package also owns the neutral 3×3 literal-sign placement function previously embedded in `astral-identicons`.
+
+## Astral identicon rendering API
+
+`renderAstralIdenticonV8()` and `renderAstralIdenticonV9()` own the actual identicon SVG composition. This includes the shared wheel/ring construction, Solar constellation artwork, literal sign placement, visual Reed-Solomon stars, calibration references and v9 visual geometry.
+
+The identicon consumer still owns identity encoding, Reed-Solomon byte generation, palette selection, scanner/recovery logic and its application UI. It passes the resulting rendering state to this package rather than constructing the SVG itself.
+
+The literal astrological identity used by the identicon renderer is intentionally limited to the six canonical fields used by the identicon visual contract:
+
+- Solar
+- Lunar
+- Ascendant
+- Midheaven
+- Descendant
+- Imum Coeli
+
+Other chart metadata may exist in the source `.astral`, but it is not part of the identicon wheel. The identicon renderer does not add nodes, other natal points or aspect lines.
+
+The legacy v8 renderer remains available so existing short-seed identicons retain their current visual contract while v9 public-key identicons use the current scannable format.
+
+## Shared assets
 
 Shared assets are copied byte-for-byte from the source revisions recorded in `SOURCE_REVISIONS`:
 
