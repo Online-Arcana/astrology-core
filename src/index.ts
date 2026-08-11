@@ -1,5 +1,14 @@
 export { renderChartWheel } from "./chartWheel.js";
 export { applyCanonicalWheelGlyphs } from "./chartWheelGlyphs.js";
+export {
+  defaultLiteralSignGridGeometry,
+  literalSignGridPlacements,
+} from "./literalSignGrid.js";
+export type {
+  LiteralSignGridGeometry,
+  LiteralSignGridPlacement,
+  LiteralSignIdentity,
+} from "./literalSignGrid.js";
 export type {
   AngleId, Aspect, AspectKind, ChartWheelCalculation, HouseNumber,
   HouseSystem, LotId, NodeId, OtherPointId, PlanetId, PointId, Sign,
