@@ -1,4 +1,5 @@
-import { calc, loadPorts, type CalcOptions } from "../calculate/calc.js";
+import { calc, type CalcOptions } from "../calculate/calc.js";
+import { loadPorts } from "../calculate/ports.js";
 import { loadCscCatalogue } from "../place/csc.js";
 import type { PlaceCatalogue } from "../place/model.js";
 import type { Calculation } from "../types/calc.js";
