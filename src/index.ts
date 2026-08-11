@@ -1,5 +1,6 @@
 export * from "./types/index.js";
 export * from "./calculate/calc.js";
+export * from "./calculate/ports.js";
 export * from "./random/chart.js";
 export * from "./astro/port.js";
 export * from "./astro/astronomia.js";
