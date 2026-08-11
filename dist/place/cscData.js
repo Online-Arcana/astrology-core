@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-const root = fileURLToPath(new URL("../data/places/", import.meta.url));
+const root = fileURLToPath(new URL("../data/places/data/", import.meta.url));
 const countryDirs = new Map();
 const stateDirs = new Map();
 const json = async (...parts) => JSON.parse(await readFile(join(root, ...parts), "utf8"));

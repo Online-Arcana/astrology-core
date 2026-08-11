@@ -6,11 +6,26 @@
   "private": true,
   "license": "MIT",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-    "./web": { "types": "./dist/web.d.ts", "default": "./dist/web.js" },
-    "./wheel": { "types": "./dist/wheel/index.d.ts", "default": "./dist/wheel.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./web": {
+      "types": "./dist/web.d.ts",
+      "default": "./dist/web.js"
+    },
+    "./wheel": {
+      "types": "./dist/wheel/index.d.ts",
+      "default": "./dist/wheel.js"
+    }
   },
-  "files": ["dist", "data", "assets", "styles", "LICENSE"],
+  "files": [
+    "dist",
+    "data",
+    "assets",
+    "styles",
+    "LICENSE"
+  ],
   "scripts": {
     "vendor:astronomy": "npm --prefix vendor/astronomy install && npm --prefix vendor/astronomy run build",
     "vendor:places": "npm --prefix vendor/places/packages/countries install --ignore-scripts --workspaces=false --no-audit && npm --prefix vendor/places/packages/countries run build",
@@ -18,8 +33,9 @@
     "vendor:build": "npm run vendor:astronomy && npm run vendor:places && npm run vendor:time",
     "check": "tsc -p tsconfig.json --noEmit",
     "build": "rm -rf dist && node scripts/data.mjs && tsc -p tsconfig.json && node scripts/bundle.mjs",
-    "test": "node test/core.mjs",
-    "ci": "npm run check && npm run build && npm test"
+    "test": "node test/core.mjs && npm run test:regression",
+    "ci": "npm run check && npm run build && npm test",
+    "test:regression": "rm -rf .test && tsc -p tsconfig.test.json && node .test/test/calculation.js && node .test/test/timeInput.js && node .test/test/geometry.js && node .test/test/points.js && node .test/test/dignity.js && node .test/test/derived.js && node .test/test/patterns.js && node .test/test/eclipses.js && node .test/test/compatibility.js"
   },
   "devDependencies": {
     "@js-joda/core": "file:vendor/time/packages/core",

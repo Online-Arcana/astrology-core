@@ -21634,7 +21634,7 @@ function base60(value) {
   }
   return out * sign;
 }
-function numbers(values2) {
+function numbers2(values2) {
   return values2.map(base60);
 }
 function untils(values2, length) {
@@ -21667,9 +21667,9 @@ function unpack(value) {
   const data2 = value.split("|");
   const name = field(data2, 0);
   const abbreviations = field(data2, 1).split(" ");
-  const offsets = numbers(field(data2, 2).split(" "));
-  const indices = numbers(field(data2, 3).split(""));
-  const limits = untils(numbers(field(data2, 4).split(" ")), indices.length);
+  const offsets = numbers2(field(data2, 2).split(" "));
+  const indices = numbers2(field(data2, 3).split(""));
+  const limits = untils(numbers2(field(data2, 4).split(" ")), indices.length);
   const population = Number(data2[5] ?? 0) | 0;
   return {
     name,
@@ -21950,7 +21950,7 @@ __export(base_exports, {
   meanSiderealYear: () => meanSiderealYear,
   modf: () => modf,
   pmod: () => pmod,
-  round: () => round,
+  round: () => round2,
   sincos: () => sincos,
   toDeg: () => toDeg,
   toRad: () => toRad
@@ -22044,7 +22044,7 @@ function modf(float) {
   const f = Math.abs(float - i);
   return [i, f];
 }
-function round(float, precision = 14) {
+function round2(float, precision = 14) {
   return parseFloat(float.toFixed(precision));
 }
 function errorCode(msg, code3) {
@@ -22172,7 +22172,7 @@ var init_base = __esm({
       toRad,
       toDeg,
       modf,
-      round,
+      round: round2,
       CodeError,
       errorCode
     };
@@ -22192,7 +22192,7 @@ function degToDMS(deg) {
   deg = Math.abs(deg);
   let [d2, s2] = modf2(deg % 360);
   const [m10, s1] = modf2(s2 * 60);
-  s2 = round2(s1 * 60);
+  s2 = round3(s1 * 60);
   return [neg, d2, m10, s2];
 }
 function modf2(float) {
@@ -22200,7 +22200,7 @@ function modf2(float) {
   const f = Math.abs(float - i);
   return [i, f];
 }
-function round2(float, precision = 10) {
+function round3(float, precision = 10) {
   return parseFloat(float.toFixed(precision));
 }
 var Angle, HourAngle, RA, Time, angleFromDeg, angleFromMin, angleFromSec, degFromAngle, secFromAngle, secFromHourAngle, sexagesimal_default;
@@ -22275,7 +22275,7 @@ var init_sexagesimal = __esm({
        */
       toString(precision) {
         const [neg, d2, m10, s2] = this.toDMS();
-        const sec = round2(s2, precision).toString().replace(/^0\./, ".");
+        const sec = round3(s2, precision).toString().replace(/^0\./, ".");
         const str = (neg ? "-" : "") + (d2 + "\xB0") + (m10 + "\u2032") + (sec + "\u2033");
         return str;
       }
@@ -22286,7 +22286,7 @@ var init_sexagesimal = __esm({
        */
       toDegString(precision) {
         const [i, s2] = modf2(this.deg());
-        const fraction = round2(s2, precision).toString().replace(/^0\./, ".");
+        const fraction = round3(s2, precision).toString().replace(/^0\./, ".");
         const str = i + "\xB0" + fraction;
         return str;
       }
@@ -22332,7 +22332,7 @@ var init_sexagesimal = __esm({
        */
       toString(precision) {
         const [neg, h, m10, s2] = this.toDMS();
-        const sec = round2(s2, precision).toString().replace(/^0\./, ".");
+        const sec = round3(s2, precision).toString().replace(/^0\./, ".");
         const str = (neg ? "-" : "") + (h + "\u02B0") + (m10 + "\u1D50") + (sec + "\u02E2");
         return str;
       }
@@ -22444,10 +22444,10 @@ var init_sexagesimal = __esm({
         let [si, sf] = modf2(s2);
         let fraction = "";
         if (precision === 0) {
-          si = round2(s2, 0);
+          si = round3(s2, 0);
           sf = 0;
         } else {
-          fraction = round2(sf, precision).toString().slice(1);
+          fraction = round3(sf, precision).toString().slice(1);
         }
         const str = (neg ? "-" : "") + (h + "\u02B0") + (m10 + "\u1D50") + (si + "\u02E2") + fraction;
         return str;
@@ -61625,348 +61625,6 @@ var calculateAstronomy = (time2, port) => {
   };
 };
 
-// src/vendor/load.ts
-var loadVendor = async (specifier) => {
-  switch (specifier) {
-    case "@js-joda/core":
-      return Promise.resolve().then(() => (init_js_joda_esm(), js_joda_esm_exports));
-    case "@js-joda/timezone":
-      return Promise.resolve().then(() => (init_js_joda_timezone_esm(), js_joda_timezone_esm_exports));
-    case "astronomia/base":
-      return Promise.resolve().then(() => (init_base(), base_exports));
-    case "astronomia/apparent":
-      return Promise.resolve().then(() => (init_apparent(), apparent_exports));
-    case "astronomia/planetposition":
-      return Promise.resolve().then(() => (init_planetposition(), planetposition_exports));
-    case "astronomia/nutation":
-      return Promise.resolve().then(() => (init_nutation(), nutation_exports));
-    case "astronomia/sidereal":
-      return Promise.resolve().then(() => (init_sidereal(), sidereal_exports));
-    case "astronomia/coord":
-      return Promise.resolve().then(() => (init_coord(), coord_exports));
-    case "astronomia/precess":
-      return Promise.resolve().then(() => (init_precess(), precess_exports));
-    case "astronomia/solar":
-      return Promise.resolve().then(() => (init_solar(), solar_exports));
-    case "astronomia/moonposition":
-      return Promise.resolve().then(() => (init_moonposition(), moonposition_exports));
-    case "astronomia/pluto":
-      return Promise.resolve().then(() => (init_pluto(), pluto_exports));
-    case "astronomia/julian":
-      return Promise.resolve().then(() => (init_julian(), julian_exports));
-    case "astronomia/deltat":
-      return Promise.resolve().then(() => (init_deltat2(), deltat_exports));
-    case "astronomia/eclipse":
-      return Promise.resolve().then(() => (init_eclipse(), eclipse_exports));
-    case "astronomia/data/vsop87Bearth":
-      return Promise.resolve().then(() => (init_vsop87Bearth(), vsop87Bearth_exports));
-    case "astronomia/data/vsop87Bmercury":
-      return Promise.resolve().then(() => (init_vsop87Bmercury(), vsop87Bmercury_exports));
-    case "astronomia/data/vsop87Bvenus":
-      return Promise.resolve().then(() => (init_vsop87Bvenus(), vsop87Bvenus_exports));
-    case "astronomia/data/vsop87Bmars":
-      return Promise.resolve().then(() => (init_vsop87Bmars(), vsop87Bmars_exports));
-    case "astronomia/data/vsop87Bjupiter":
-      return Promise.resolve().then(() => (init_vsop87Bjupiter(), vsop87Bjupiter_exports));
-    case "astronomia/data/vsop87Bsaturn":
-      return Promise.resolve().then(() => (init_vsop87Bsaturn(), vsop87Bsaturn_exports));
-    case "astronomia/data/vsop87Buranus":
-      return Promise.resolve().then(() => (init_vsop87Buranus(), vsop87Buranus_exports));
-    case "astronomia/data/vsop87Bneptune":
-      return Promise.resolve().then(() => (init_vsop87Bneptune(), vsop87Bneptune_exports));
-    default:
-      throw new Error(`Unknown astral-core vendor ${specifier}`);
-  }
-};
-
-// src/vendor/revisions.ts
-var vendorRevisions = {
-  astronomia: { repository: "kitty-crow/astronomia", revision: "ed1064049979b68abb3ff0a7812f5ee4fc04caec", version: "5.1.0" },
-  places: { repository: "kitty-crow/countrystatecity", revision: "eaba6b0028b9632d2e2fec9a4a1b78ce3336479d", version: "2.1.2" },
-  time: {
-    repository: "kitty-crow/ts-joda",
-    revision: "96828b6097da77b2de38171dfd1bf92c0df7edc7",
-    coreVersion: "7.0.0",
-    timezoneVersion: "3.0.0",
-    timeZoneDatabaseVersion: "2026a",
-    supportedRange: "1900-01-01/2100-12-31"
-  }
-};
-
-// src/astro/astronomia.ts
-var tau = 2 * Math.PI;
-var auKilometres = 1495978707e-1;
-var finiteDate = (utcIso) => {
-  const date2 = new Date(utcIso);
-  if (!Number.isFinite(date2.getTime())) throw new Error("Invalid UTC instant");
-  return date2;
-};
-var geocentric = (planet, earth, jde, modules) => {
-  const earthPosition = earth.position(jde);
-  let x = 0;
-  let y = 0;
-  let z = 0;
-  let distance2 = 0;
-  const update = (lightDays = 0) => {
-    const body2 = planet.position(jde - lightDays);
-    const bodyCosLat = Math.cos(body2.lat);
-    const earthCosLat = Math.cos(earthPosition.lat);
-    x = body2.range * bodyCosLat * Math.cos(body2.lon) - earthPosition.range * earthCosLat * Math.cos(earthPosition.lon);
-    y = body2.range * bodyCosLat * Math.sin(body2.lon) - earthPosition.range * earthCosLat * Math.sin(earthPosition.lon);
-    z = body2.range * Math.sin(body2.lat) - earthPosition.range * Math.sin(earthPosition.lat);
-    distance2 = Math.hypot(x, y, z);
-  };
-  update();
-  update(modules.base.lightTime(distance2));
-  let lon = Math.atan2(y, x);
-  let lat = Math.atan2(z, Math.hypot(x, y));
-  const [aberrationLon, aberrationLat] = modules.apparent.eclipticAberration(lon, lat, jde);
-  const fk5 = modules.planetposition.toFK5(lon + aberrationLon, lat + aberrationLat, jde);
-  lon = fk5.lon;
-  lat = fk5.lat;
-  const [nutationLon, nutationObliquity] = modules.nutation.nutation(jde);
-  lon = modules.base.pmod(lon + nutationLon, tau);
-  const obliquity = modules.nutation.meanObliquity(jde) + nutationObliquity;
-  const equatorial = new modules.coord.Ecliptic(lon, lat).toEquatorial(obliquity);
-  return {
-    rightAscensionRadians: modules.base.pmod(equatorial.ra, tau),
-    declinationRadians: equatorial.dec,
-    eclipticLongitudeRadians: lon,
-    eclipticLatitudeRadians: lat,
-    distanceAu: distance2
-  };
-};
-var VendorAstronomia = class {
-  provider = vendorRevisions.astronomia;
-  #modules;
-  #earth;
-  #planets;
-  #pluto;
-  constructor(modules, earth, planets3) {
-    this.#modules = modules;
-    this.#earth = earth;
-    this.#planets = planets3;
-    this.#pluto = {
-      position: (jde) => {
-        const value = modules.pluto.heliocentric(jde);
-        const datePosition = modules.precess.eclipticPosition(
-          new modules.coord.Ecliptic(value.lon, value.lat),
-          2e3,
-          modules.base.JDEToJulianYear(jde)
-        );
-        return { lon: datePosition.lon, lat: datePosition.lat, range: value.range };
-      }
-    };
-  }
-  time(utcIso) {
-    const calendar = new this.#modules.julian.CalendarGregorian(finiteDate(utcIso));
-    const julianDay = calendar.toJD();
-    const deltaTSeconds = this.#modules.deltat.deltaT(calendar.toYear());
-    return {
-      julianDay,
-      deltaTSeconds,
-      julianEphemerisDay: julianDay + deltaTSeconds / 86400
-    };
-  }
-  geometry(julianDay, julianEphemerisDay) {
-    const [, nutationObliquity] = this.#modules.nutation.nutation(julianEphemerisDay);
-    return {
-      apparentSiderealDegrees: this.#modules.sidereal.apparent(julianDay) / 240,
-      trueObliquityRadians: this.#modules.nutation.meanObliquity(julianEphemerisDay) + nutationObliquity
-    };
-  }
-  sample(id, jde) {
-    if (id === "sun") {
-      const ecliptic = this.#modules.solar.apparentVSOP87(this.#earth, jde);
-      const equatorial = this.#modules.solar.apparentEquatorialVSOP87(this.#earth, jde);
-      return {
-        rightAscensionRadians: this.#modules.base.pmod(equatorial.ra, tau),
-        declinationRadians: equatorial.dec,
-        eclipticLongitudeRadians: this.#modules.base.pmod(ecliptic.lon, tau),
-        eclipticLatitudeRadians: ecliptic.lat,
-        distanceAu: ecliptic.range
-      };
-    }
-    if (id === "moon") {
-      const mean3 = this.#modules.moon.position(jde);
-      const [nutationLon, nutationObliquity] = this.#modules.nutation.nutation(jde);
-      const lon = this.#modules.base.pmod(mean3.lon + nutationLon, tau);
-      const obliquity = this.#modules.nutation.meanObliquity(jde) + nutationObliquity;
-      const equatorial = new this.#modules.coord.Ecliptic(lon, mean3.lat).toEquatorial(obliquity);
-      return {
-        rightAscensionRadians: this.#modules.base.pmod(equatorial.ra, tau),
-        declinationRadians: equatorial.dec,
-        eclipticLongitudeRadians: lon,
-        eclipticLatitudeRadians: mean3.lat,
-        distanceAu: mean3.range / auKilometres
-      };
-    }
-    return geocentric(
-      id === "pluto" ? this.#pluto : this.#planets[id],
-      this.#earth,
-      jde,
-      this.#modules
-    );
-  }
-};
-var moduleDefault = async (path) => (await loadVendor(path)).default;
-var loadAstronomia = async () => {
-  const [
-    base,
-    apparent2,
-    planetpositionModule,
-    nutation3,
-    sidereal,
-    coord,
-    precess,
-    solar2,
-    moon,
-    pluto,
-    julian,
-    deltat,
-    earthData,
-    mercuryData,
-    venusData,
-    marsData,
-    jupiterData,
-    saturnData,
-    uranusData,
-    neptuneData
-  ] = await Promise.all([
-    moduleDefault("astronomia/base"),
-    moduleDefault("astronomia/apparent"),
-    loadVendor("astronomia/planetposition"),
-    moduleDefault("astronomia/nutation"),
-    moduleDefault("astronomia/sidereal"),
-    moduleDefault("astronomia/coord"),
-    moduleDefault("astronomia/precess"),
-    moduleDefault("astronomia/solar"),
-    moduleDefault("astronomia/moonposition"),
-    moduleDefault("astronomia/pluto"),
-    moduleDefault("astronomia/julian"),
-    moduleDefault("astronomia/deltat"),
-    moduleDefault("astronomia/data/vsop87Bearth"),
-    moduleDefault("astronomia/data/vsop87Bmercury"),
-    moduleDefault("astronomia/data/vsop87Bvenus"),
-    moduleDefault("astronomia/data/vsop87Bmars"),
-    moduleDefault("astronomia/data/vsop87Bjupiter"),
-    moduleDefault("astronomia/data/vsop87Bsaturn"),
-    moduleDefault("astronomia/data/vsop87Buranus"),
-    moduleDefault("astronomia/data/vsop87Bneptune")
-  ]);
-  const planetposition = planetpositionModule.default;
-  const earth = new planetposition.Planet(earthData);
-  const planets3 = {
-    mercury: new planetposition.Planet(mercuryData),
-    venus: new planetposition.Planet(venusData),
-    mars: new planetposition.Planet(marsData),
-    jupiter: new planetposition.Planet(jupiterData),
-    saturn: new planetposition.Planet(saturnData),
-    uranus: new planetposition.Planet(uranusData),
-    neptune: new planetposition.Planet(neptuneData)
-  };
-  return new VendorAstronomia(
-    { base, apparent: apparent2, planetposition, nutation: nutation3, sidereal, coord, precess, solar: solar2, moon, pluto, julian, deltat },
-    earth,
-    planets3
-  );
-};
-
-// src/astro/lunarOrbit.ts
-var radiansToDegrees = 180 / Math.PI;
-var earthMoonMuKm3PerDay2 = (398600.435507 + 4902.800118) * 86400 ** 2;
-var vector = (position6) => {
-  const cosLatitude = Math.cos(position6.lat);
-  return {
-    x: position6.range * cosLatitude * Math.cos(position6.lon),
-    y: position6.range * cosLatitude * Math.sin(position6.lon),
-    z: position6.range * Math.sin(position6.lat)
-  };
-};
-var subtract = (a, b) => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
-var scale = (value, factor) => ({ x: value.x * factor, y: value.y * factor, z: value.z * factor });
-var cross = (a, b) => ({
-  x: a.y * b.z - a.z * b.y,
-  y: a.z * b.x - a.x * b.z,
-  z: a.x * b.y - a.y * b.x
-});
-var magnitude = (value) => Math.hypot(value.x, value.y, value.z);
-var longitude = (value) => normaliseDegrees(Math.atan2(value.y, value.x) * radiansToDegrees);
-var polynomial = (t, coefficients) => {
-  let value = 0;
-  for (let index2 = coefficients.length - 1; index2 >= 0; index2 -= 1) value = value * t + coefficients[index2];
-  return value;
-};
-var meanNode = (jde) => {
-  const t = (jde - 2451545) / 36525;
-  return polynomial(t, [125.0445479, -1934.1362891, 20754e-7, 1 / 467441, -1 / 60616e3]);
-};
-var meanApogee = (jde) => {
-  const t = (jde - 2451545) / 36525;
-  const perigee2 = polynomial(t, [83.3532465, 4069.0137287, -0.01032, -1 / 80053, 1 / 18999e3]);
-  return perigee2 + 180;
-};
-var osculating = (moon, jde) => {
-  const step = 1e-3;
-  const current = vector(moon.position(jde));
-  const velocity2 = scale(
-    subtract(vector(moon.position(jde + step)), vector(moon.position(jde - step))),
-    1 / (2 * step)
-  );
-  const angularMomentum = cross(current, velocity2);
-  if (magnitude(angularMomentum) === 0) throw new Error("Lunar state has no angular momentum");
-  const eccentricity2 = subtract(
-    scale(cross(velocity2, angularMomentum), 1 / earthMoonMuKm3PerDay2),
-    scale(current, 1 / magnitude(current))
-  );
-  if (magnitude(eccentricity2) < 1e-9) throw new Error("Lunar osculating apogee is undefined");
-  return {
-    node: normaliseDegrees(Math.atan2(angularMomentum.x, -angularMomentum.y) * radiansToDegrees),
-    apogee: longitude(scale(eccentricity2, -1))
-  };
-};
-var longitudes = (moon, nutation3, jde) => {
-  const correction = nutation3.nutation(jde)[0] * radiansToDegrees;
-  const trueOrbit = osculating(moon, jde);
-  return {
-    meanNode: normaliseDegrees(meanNode(jde) + correction),
-    trueNode: normaliseDegrees(trueOrbit.node + correction),
-    meanApogee: normaliseDegrees(meanApogee(jde) + correction),
-    trueApogee: normaliseDegrees(trueOrbit.apogee + correction)
-  };
-};
-var signedDelta2 = (after, before) => {
-  const delta = normaliseDegrees(after - before);
-  return delta > 180 ? delta - 360 : delta;
-};
-var AstronomiaLunarOrbit = class {
-  #moon;
-  #nutation;
-  constructor(moon, nutation3) {
-    this.#moon = moon;
-    this.#nutation = nutation3;
-  }
-  sample(jde) {
-    const current = longitudes(this.#moon, this.#nutation, jde);
-    const before = longitudes(this.#moon, this.#nutation, jde - 0.5);
-    const after = longitudes(this.#moon, this.#nutation, jde + 0.5);
-    return {
-      meanNode: { longitudeDegrees: current.meanNode, speedDegreesPerDay: signedDelta2(after.meanNode, before.meanNode) },
-      trueNode: { longitudeDegrees: current.trueNode, speedDegreesPerDay: signedDelta2(after.trueNode, before.trueNode) },
-      meanApogee: { longitudeDegrees: current.meanApogee, speedDegreesPerDay: signedDelta2(after.meanApogee, before.meanApogee) },
-      trueApogee: { longitudeDegrees: current.trueApogee, speedDegreesPerDay: signedDelta2(after.trueApogee, before.trueApogee) }
-    };
-  }
-};
-var moduleDefault2 = async (path) => (await loadVendor(path)).default;
-var loadLunarOrbit = async () => {
-  const [moon, nutation3] = await Promise.all([
-    moduleDefault2("astronomia/moonposition"),
-    moduleDefault2("astronomia/nutation")
-  ]);
-  return new AstronomiaLunarOrbit(moon, nutation3);
-};
-
 // src/astro/lots.ts
 var unavailable2 = (reason) => ({ status: "unavailable", value: null, reason });
 var available = (value, status, reason) => ({
@@ -62276,7 +61934,7 @@ var rankCompatibility = (zodiac, domain, raw) => {
 
 // src/compat/calculate.ts
 var signIndex = new Map(signs.map((sign, index2) => [sign, index2]));
-var round3 = (value) => Math.round(value * 1e6) / 1e6;
+var round = (value) => Math.round(value * 1e6) / 1e6;
 var signRelation = (a, b) => {
   const left = signIndex.get(a);
   const right = signIndex.get(b);
@@ -62320,10 +61978,10 @@ var completeFactors = (pending) => {
   if (!(totalWeight > 0)) throw new Error("Compatibility scoring has no available factors");
   const factors = pending.map((factor) => ({
     ...factor,
-    contribution: round3(factor.weight * factor.value / totalWeight * 100)
+    contribution: round(factor.weight * factor.value / totalWeight * 100)
   }));
   return {
-    score: round3(pending.reduce((sum2, factor) => sum2 + factor.weight * factor.value, 0) / totalWeight * 100),
+    score: round(pending.reduce((sum2, factor) => sum2 + factor.weight * factor.value, 0) / totalWeight * 100),
     factors
   };
 };
@@ -62574,10 +62232,10 @@ var distance = (a, b) => {
   const delta = Math.abs(normaliseDegrees(a) - normaliseDegrees(b));
   return Math.min(delta, 360 - delta);
 };
-var longitude2 = (astronomy, id, jde) => normaliseDegrees(astronomy.sample(id, jde).eclipticLongitudeRadians * 180 / Math.PI);
+var longitude = (astronomy, id, jde) => normaliseDegrees(astronomy.sample(id, jde).eclipticLongitudeRadians * 180 / Math.PI);
 var facts = (event, astronomy, lunarOrbit) => {
-  const sun = longitude2(astronomy, "sun", event.julianEphemerisDay);
-  const moon = longitude2(astronomy, "moon", event.julianEphemerisDay);
+  const sun = longitude(astronomy, "sun", event.julianEphemerisDay);
+  const moon = longitude(astronomy, "moon", event.julianEphemerisDay);
   const eclipseLongitude = event.kind === "solar" ? sun : moon;
   const north = normaliseDegrees(lunarOrbit.sample(event.julianEphemerisDay).trueNode.longitudeDegrees);
   const south = normaliseDegrees(north + 180);
@@ -62700,244 +62358,6 @@ var calculateEclipses = (input) => {
     } : unavailable3("insufficient_data")
   };
 };
-
-// src/eclipse/astronomia.ts
-var solarHalfDurationDays = 3 / 24;
-var finite2 = (value, name) => {
-  if (value === void 0 || !Number.isFinite(value)) throw new Error(`Invalid eclipse ${name}`);
-  return value;
-};
-var typeOf = (kind, raw, api) => {
-  if (raw.type === api.TYPE.None) return null;
-  if (kind === "solar") {
-    if (raw.type === api.TYPE.Partial) return "partial";
-    if (raw.type === api.TYPE.Annular) return "annular";
-    if (raw.type === api.TYPE.AnnularTotal) return "hybrid";
-    if (raw.type === api.TYPE.Total) return "total";
-  } else {
-    if (raw.type === api.TYPE.Penumbral) return "penumbral";
-    if (raw.type === api.TYPE.Umbral) return "partial";
-    if (raw.type === api.TYPE.Total) return "total";
-  }
-  throw new Error(`Unsupported ${kind} eclipse type ${raw.type}`);
-};
-var AstronomiaEclipses = class {
-  provider = vendorRevisions.astronomia;
-  #eclipse;
-  #julian;
-  constructor(eclipse, julian) {
-    this.#eclipse = eclipse;
-    this.#julian = julian;
-  }
-  sample(kind, decimalYear) {
-    const raw = kind === "solar" ? this.#eclipse.solar(decimalYear) : this.#eclipse.lunar(decimalYear);
-    const type = typeOf(kind, raw, this.#eclipse);
-    if (type === null) return null;
-    const activeHalfDurationDays = kind === "solar" ? solarHalfDurationDays : finite2(raw.sdPenumbral, "penumbral semiduration");
-    return {
-      kind,
-      type,
-      julianEphemerisDay: finite2(raw.jdeMax, "maximum JDE"),
-      magnitude: raw.magnitude !== void 0 && Number.isFinite(raw.magnitude) ? raw.magnitude : null,
-      activeHalfDurationDays
-    };
-  }
-  decimalYear(julianEphemerisDay) {
-    return new this.#julian.CalendarGregorian().fromJDE(julianEphemerisDay).toYear();
-  }
-  utcIso(julianEphemerisDay) {
-    return new this.#julian.CalendarGregorian().fromJDE(julianEphemerisDay).toISOString();
-  }
-};
-var moduleDefault3 = async (path) => (await loadVendor(path)).default;
-var loadEclipses = async () => {
-  const [eclipse, julian] = await Promise.all([
-    moduleDefault3("astronomia/eclipse"),
-    moduleDefault3("astronomia/julian")
-  ]);
-  return new AstronomiaEclipses(eclipse, julian);
-};
-
-// src/place/cscData.ts
-import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
-var root = fileURLToPath(new URL("../data/places/", import.meta.url));
-var countryDirs = /* @__PURE__ */ new Map();
-var stateDirs = /* @__PURE__ */ new Map();
-var json = async (...parts) => JSON.parse(await readFile(join(root, ...parts), "utf8"));
-var code = (name) => {
-  const at3 = name.lastIndexOf("-");
-  return at3 < 0 ? null : name.slice(at3 + 1).toUpperCase();
-};
-var dirs = async (parts) => {
-  const values2 = /* @__PURE__ */ new Map();
-  for (const item of await readdir(join(root, ...parts), { withFileTypes: true })) {
-    if (!item.isDirectory()) continue;
-    const key2 = code(item.name);
-    if (key2 !== null) values2.set(key2, item.name);
-  }
-  return values2;
-};
-var countryDir = async (countryCode) => {
-  if (countryDirs.size === 0) {
-    for (const [key2, value] of await dirs([])) countryDirs.set(key2, value);
-  }
-  return countryDirs.get(countryCode.toUpperCase()) ?? null;
-};
-var stateDir = async (countryCode, stateCode) => {
-  const cc = countryCode.toUpperCase();
-  const country2 = await countryDir(cc);
-  if (country2 === null) return null;
-  let values2 = stateDirs.get(cc);
-  if (values2 === void 0) {
-    values2 = await dirs([country2]);
-    stateDirs.set(cc, values2);
-  }
-  return values2.get(stateCode.toUpperCase()) ?? null;
-};
-var country = async (countryCode) => {
-  const dir = await countryDir(countryCode);
-  if (dir === null) return null;
-  return { dir, meta: await json(dir, "meta.json") };
-};
-var getStates = async (countryCode) => {
-  const value = await country(countryCode);
-  return value === null ? [] : json(value.dir, "states.json");
-};
-var getCities = async (countryCode, stateCode) => {
-  const country2 = await countryDir(countryCode);
-  const state2 = await stateDir(countryCode, stateCode);
-  return country2 === null || state2 === null ? [] : json(country2, state2, "cities.json");
-};
-var cscData = {
-  getCountries: () => json("countries.json"),
-  async getCountryByCode(countryCode) {
-    return (await country(countryCode))?.meta ?? null;
-  },
-  getStatesOfCountry: getStates,
-  async getStateByCode(countryCode, stateCode) {
-    const wanted = stateCode.toUpperCase();
-    return (await getStates(countryCode)).find((value) => value.iso2.toUpperCase() === wanted) ?? null;
-  },
-  getCitiesOfState: getCities,
-  async getAllCitiesOfCountry(countryCode) {
-    const rows = [];
-    for (const state2 of await getStates(countryCode)) rows.push(...await getCities(countryCode, state2.iso2));
-    return rows;
-  }
-};
-
-// src/place/normalise.ts
-var code2 = (value) => value.trim().toUpperCase();
-var coordinate = (value, name, min, max) => {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
-    throw new Error(`${name} is outside its valid range`);
-  }
-  return parsed;
-};
-var zone = (city, region, country2) => {
-  const candidates = [city.timezone, region?.timezone ?? null];
-  if (country2.timezones.length === 1) candidates.push(country2.timezones[0]?.zoneName ?? null);
-  const selected = candidates.find((value) => typeof value === "string" && value.length > 0);
-  if (!selected || !/^[A-Za-z_+.-]+(?:\/[A-Za-z0-9_+.-]+)+$/u.test(selected)) {
-    throw new Error(`City ${city.id} has no usable IANA time zone`);
-  }
-  return selected;
-};
-var placeId = (countryCode, regionCode, cityId) => `csc:${code2(countryCode)}:${regionCode ? code2(regionCode) : "-"}:${cityId}`;
-var parsePlaceId = (id) => {
-  const match = /^csc:([A-Z]{2}):([A-Z0-9-]+|-):(\d+)$/u.exec(id);
-  if (!match) throw new Error("Invalid place ID");
-  const cityId = Number(match[3]);
-  if (!Number.isSafeInteger(cityId) || cityId < 1) throw new Error("Invalid city ID");
-  return {
-    countryCode: match[1],
-    regionCode: match[2] === "-" ? null : match[2],
-    cityId
-  };
-};
-var normalisePlace = (country2, region, city) => {
-  const countryCode = code2(country2.iso2);
-  if (code2(city.country_code) !== countryCode) throw new Error("City country does not match selected country");
-  if (region) {
-    if (code2(region.country_code) !== countryCode) throw new Error("Region country does not match selected country");
-    if (code2(city.state_code) !== code2(region.iso2)) throw new Error("City region does not match selected region");
-  }
-  return {
-    id: placeId(countryCode, region?.iso2 ?? null, city.id),
-    continent: country2.region.trim() || "Unknown",
-    subcontinent: country2.subregion.trim() || null,
-    country: { code: countryCode, name: country2.name },
-    region: region ? { code: code2(region.iso2), name: region.name } : null,
-    city: { name: city.name },
-    latitude: coordinate(city.latitude, "Latitude", -90, 90),
-    longitude: coordinate(city.longitude, "Longitude", -180, 180),
-    elevationMetres: null,
-    timeZone: zone(city, region, country2)
-  };
-};
-
-// src/place/csc.ts
-var fold = (value) => value.normalize("NFKD").replace(new RegExp("\\p{M}", "gu"), "").toLocaleLowerCase("en-GB");
-var order = (items) => items.sort((a, b) => a.name.localeCompare(b.name, "en-GB"));
-var cityZone = (city, region, country2) => {
-  if (city.timezone) return city.timezone;
-  if (region?.timezone) return region.timezone;
-  if (country2.timezones.length === 1 && country2.timezones[0]) return country2.timezones[0].zoneName;
-  return "";
-};
-var CscCatalogue = class {
-  #api;
-  constructor(api) {
-    this.#api = api;
-  }
-  async continents() {
-    return [...new Set((await this.#api.getCountries()).map((country2) => country2.region.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "en-GB"));
-  }
-  async countries(continent) {
-    const selected = continent ? fold(continent) : null;
-    return order((await this.#api.getCountries()).filter((country2) => selected === null || fold(country2.region) === selected).map((country2) => ({
-      code: country2.iso2.toUpperCase(),
-      name: country2.name,
-      continent: country2.region,
-      subcontinent: country2.subregion || null
-    })));
-  }
-  async regions(countryCode) {
-    return order((await this.#api.getStatesOfCountry(countryCode.toUpperCase())).map((region) => ({ code: region.iso2.toUpperCase(), name: region.name })));
-  }
-  async cities(countryCode, regionCode, query) {
-    const cc = countryCode.toUpperCase();
-    const country2 = await this.#api.getCountryByCode(cc);
-    if (!country2) throw new Error(`Unknown country ${cc}`);
-    const region = regionCode ? await this.#api.getStateByCode(cc, regionCode.toUpperCase()) : null;
-    if (regionCode && !region) throw new Error(`Unknown region ${cc}/${regionCode}`);
-    const cities = region ? await this.#api.getCitiesOfState(cc, region.iso2) : await this.#api.getAllCitiesOfCountry(cc);
-    const needle = fold(query.trim());
-    return order(cities.filter((city) => needle.length === 0 || fold(city.name).includes(needle)).map((city) => ({
-      id: placeId(cc, region?.iso2 ?? (city.state_code || null), city.id),
-      name: city.name,
-      region: region ? { code: region.iso2.toUpperCase(), name: region.name } : city.state_code ? { code: city.state_code.toUpperCase(), name: city.state_code.toUpperCase() } : null,
-      latitude: Number(city.latitude),
-      longitude: Number(city.longitude),
-      timeZone: cityZone(city, region, country2)
-    })));
-  }
-  async get(id) {
-    const parsed = parsePlaceId(id);
-    const country2 = await this.#api.getCountryByCode(parsed.countryCode);
-    if (!country2) throw new Error(`Unknown country ${parsed.countryCode}`);
-    const region = parsed.regionCode ? await this.#api.getStateByCode(parsed.countryCode, parsed.regionCode) : null;
-    if (parsed.regionCode && !region) throw new Error(`Unknown region ${parsed.countryCode}/${parsed.regionCode}`);
-    const cities = region ? await this.#api.getCitiesOfState(parsed.countryCode, parsed.regionCode) : await this.#api.getAllCitiesOfCountry(parsed.countryCode);
-    const city = cities.find((candidate2) => candidate2.id === parsed.cityId);
-    if (!city) throw new Error(`Unknown city ${parsed.cityId}`);
-    return normalisePlace(country2, region, city);
-  }
-};
-var loadCscCatalogue = async () => new CscCatalogue(cscData);
 
 // src/time/calculate.ts
 var unavailable4 = (reason) => ({
@@ -63085,95 +62505,18 @@ var resolveBirthTime = (input, zone2, resolver, astronomy) => {
   };
 };
 
-// src/time/vendor.ts
-init_js_joda_esm();
-init_js_joda_timezone_esm();
-
-// src/time/jsJoda.ts
-var daylightSaving = (rules, instant) => {
-  if (!rules.isDaylightSavings) return null;
-  try {
-    return rules.isDaylightSavings(instant);
-  } catch {
-    return null;
+// src/vendor/revisions.ts
+var vendorRevisions = {
+  astronomia: { repository: "kitty-crow/astronomia", revision: "ed1064049979b68abb3ff0a7812f5ee4fc04caec", version: "5.1.0" },
+  places: { repository: "kitty-crow/countrystatecity", revision: "eaba6b0028b9632d2e2fec9a4a1b78ce3336479d", version: "2.1.2" },
+  time: {
+    repository: "kitty-crow/ts-joda",
+    revision: "96828b6097da77b2de38171dfd1bf92c0df7edc7",
+    coreVersion: "7.0.0",
+    timezoneVersion: "3.0.0",
+    timeZoneDatabaseVersion: "2026a",
+    supportedRange: "1900-01-01/2100-12-31"
   }
-};
-var candidate = (local, offset, rules, fold2) => {
-  const instant = local.toInstant(offset);
-  return {
-    fold: fold2,
-    utcIso: instant.toString(),
-    offsetSeconds: offset.totalSeconds(),
-    daylightSaving: daylightSaving(rules, instant)
-  };
-};
-var JsJodaResolver = class {
-  info;
-  #port;
-  constructor(port, info) {
-    this.#port = port;
-    this.info = { provider: "js-joda", ...info };
-  }
-  resolve(input) {
-    const localIso = `${input.date}T${input.time}`;
-    try {
-      const local = this.#port.localDateTime(localIso);
-      const rules = this.#port.rules(input.zone);
-      const offsets = rules.validOffsets(local);
-      if (offsets.length === 1) return { kind: "exact", localIso, candidate: candidate(local, offsets[0], rules, null) };
-      if (offsets.length === 2) {
-        const candidates = [
-          candidate(local, offsets[0], rules, 0),
-          candidate(local, offsets[1], rules, 1)
-        ];
-        if (input.fold !== void 0) return { kind: "exact", localIso, candidate: candidates[input.fold] };
-        return { kind: "ambiguous", localIso, candidates };
-      }
-      const transition = rules.transition(local);
-      if (!transition) return { kind: "unsupported", localIso, reason: "No offset or transition supplied by provider" };
-      return {
-        kind: "nonexistent",
-        localIso,
-        beforeUtcIso: transition.dateTimeBefore().toInstant(transition.offsetBefore()).toString(),
-        afterUtcIso: transition.dateTimeAfter().toInstant(transition.offsetAfter()).toString()
-      };
-    } catch (error) {
-      return { kind: "unsupported", localIso, reason: error instanceof Error ? error.message : "Unknown time resolver failure" };
-    }
-  }
-};
-
-// src/time/vendor.ts
-var RangeResolver = class {
-  info;
-  #inner;
-  constructor(inner) {
-    this.#inner = inner;
-    this.info = inner.info;
-  }
-  resolve(input) {
-    const year = Number(input.date.slice(0, 4));
-    if (!Number.isInteger(year) || year < 1900 || year > 2100) {
-      return {
-        kind: "unsupported",
-        localIso: `${input.date}T${input.time}`,
-        reason: `Date is outside supported range ${this.info.supportedRange}`
-      };
-    }
-    return this.#inner.resolve(input);
-  }
-};
-var loadTimeResolver = async () => {
-  const port = {
-    localDateTime: (iso) => LocalDateTime.parse(iso),
-    rules: (zone2) => ZoneId.of(zone2).rules()
-  };
-  return new RangeResolver(new JsJodaResolver(port, {
-    providerVersion: vendorRevisions.time.timezoneVersion,
-    dataVersion: vendorRevisions.time.timeZoneDatabaseVersion,
-    supportedRange: vendorRevisions.time.supportedRange,
-    calendar: "proleptic_gregorian"
-  }));
 };
 
 // src/astro/lunar.ts
@@ -63414,7 +62757,7 @@ var shiftCusps = (cusps, degrees2) => {
 };
 
 // src/house/chart.ts
-var numbers2 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+var numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 var calculated2 = (value, status, reason) => ({ status, value, reason });
 var unavailable5 = (reason) => ({ status: reason === "outside_supported_range" ? "unsupported" : "unavailable", value: null, reason });
 var key = (number) => String(number);
@@ -63442,8 +62785,8 @@ var house = (number, cusp, end, status, reason) => {
 };
 var chart = (system, cusps, status = "calculated", fallbackFrom = null, reason = "none", calculationStatus = "exact", calculationReason = "none") => {
   const houses = {};
-  numbers2.forEach((number, index2) => {
-    const next = numbers2[(index2 + 1) % 12];
+  numbers.forEach((number, index2) => {
+    const next = numbers[(index2 + 1) % 12];
     houses[key(number)] = house(
       number,
       cusps[key(number)],
@@ -63456,7 +62799,7 @@ var chart = (system, cusps, status = "calculated", fallbackFrom = null, reason =
 };
 var unavailableChart = (system, reason) => {
   const houses = {};
-  numbers2.forEach((number) => {
+  numbers.forEach((number) => {
     houses[key(number)] = {
       number,
       cusp: unavailable5(reason),
@@ -63498,7 +62841,7 @@ var calculateHouseCharts = (input) => {
 var housePlacement = (longitudeDegrees, chartValue) => {
   if (chartValue.status === "unavailable") return unavailable5(chartValue.reason);
   const longitude3 = normaliseDegrees(longitudeDegrees);
-  for (const number of numbers2) {
+  for (const number of numbers) {
     const current = chartValue.houses[key(number)];
     if (!current.cusp.value || !current.end.value) continue;
     const cusp = current.cusp.value.longitudeDegrees;
@@ -64537,13 +63880,7 @@ var calc = async (input, options, ports) => {
     throw new CalcError(time2.resolution.reason);
   }
   const angles2 = angleState(time2, ports.astronomy, place2.longitude, place2.latitude);
-  const sect = calculateSect(
-    astronomy,
-    angles2.core,
-    place2.latitude,
-    timed.status,
-    timed.reason
-  );
+  const sect = calculateSect(astronomy, angles2.core, place2.latitude, timed.status, timed.reason);
   const lots = calculateLots(astronomy, angles2.core, sect);
   const orbit = ports.lunarOrbit.sample(timed.julianEphemerisDay);
   const ayanamshaValue = zodiac === "sidereal" ? ayanamshaDegrees(timed.julianEphemerisDay, options.ayanamsha) : 0;
@@ -64628,6 +63965,665 @@ var calc = async (input, options, ports) => {
     }
   };
 };
+
+// src/vendor/load.ts
+var loadVendor = async (specifier) => {
+  switch (specifier) {
+    case "@js-joda/core":
+      return Promise.resolve().then(() => (init_js_joda_esm(), js_joda_esm_exports));
+    case "@js-joda/timezone":
+      return Promise.resolve().then(() => (init_js_joda_timezone_esm(), js_joda_timezone_esm_exports));
+    case "astronomia/base":
+      return Promise.resolve().then(() => (init_base(), base_exports));
+    case "astronomia/apparent":
+      return Promise.resolve().then(() => (init_apparent(), apparent_exports));
+    case "astronomia/planetposition":
+      return Promise.resolve().then(() => (init_planetposition(), planetposition_exports));
+    case "astronomia/nutation":
+      return Promise.resolve().then(() => (init_nutation(), nutation_exports));
+    case "astronomia/sidereal":
+      return Promise.resolve().then(() => (init_sidereal(), sidereal_exports));
+    case "astronomia/coord":
+      return Promise.resolve().then(() => (init_coord(), coord_exports));
+    case "astronomia/precess":
+      return Promise.resolve().then(() => (init_precess(), precess_exports));
+    case "astronomia/solar":
+      return Promise.resolve().then(() => (init_solar(), solar_exports));
+    case "astronomia/moonposition":
+      return Promise.resolve().then(() => (init_moonposition(), moonposition_exports));
+    case "astronomia/pluto":
+      return Promise.resolve().then(() => (init_pluto(), pluto_exports));
+    case "astronomia/julian":
+      return Promise.resolve().then(() => (init_julian(), julian_exports));
+    case "astronomia/deltat":
+      return Promise.resolve().then(() => (init_deltat2(), deltat_exports));
+    case "astronomia/eclipse":
+      return Promise.resolve().then(() => (init_eclipse(), eclipse_exports));
+    case "astronomia/data/vsop87Bearth":
+      return Promise.resolve().then(() => (init_vsop87Bearth(), vsop87Bearth_exports));
+    case "astronomia/data/vsop87Bmercury":
+      return Promise.resolve().then(() => (init_vsop87Bmercury(), vsop87Bmercury_exports));
+    case "astronomia/data/vsop87Bvenus":
+      return Promise.resolve().then(() => (init_vsop87Bvenus(), vsop87Bvenus_exports));
+    case "astronomia/data/vsop87Bmars":
+      return Promise.resolve().then(() => (init_vsop87Bmars(), vsop87Bmars_exports));
+    case "astronomia/data/vsop87Bjupiter":
+      return Promise.resolve().then(() => (init_vsop87Bjupiter(), vsop87Bjupiter_exports));
+    case "astronomia/data/vsop87Bsaturn":
+      return Promise.resolve().then(() => (init_vsop87Bsaturn(), vsop87Bsaturn_exports));
+    case "astronomia/data/vsop87Buranus":
+      return Promise.resolve().then(() => (init_vsop87Buranus(), vsop87Buranus_exports));
+    case "astronomia/data/vsop87Bneptune":
+      return Promise.resolve().then(() => (init_vsop87Bneptune(), vsop87Bneptune_exports));
+    default:
+      throw new Error(`Unknown astral-core vendor ${specifier}`);
+  }
+};
+
+// src/astro/astronomia.ts
+var tau = 2 * Math.PI;
+var auKilometres = 1495978707e-1;
+var finiteDate = (utcIso) => {
+  const date2 = new Date(utcIso);
+  if (!Number.isFinite(date2.getTime())) throw new Error("Invalid UTC instant");
+  return date2;
+};
+var geocentric = (planet, earth, jde, modules) => {
+  const earthPosition = earth.position(jde);
+  let x = 0;
+  let y = 0;
+  let z = 0;
+  let distance2 = 0;
+  const update = (lightDays = 0) => {
+    const body2 = planet.position(jde - lightDays);
+    const bodyCosLat = Math.cos(body2.lat);
+    const earthCosLat = Math.cos(earthPosition.lat);
+    x = body2.range * bodyCosLat * Math.cos(body2.lon) - earthPosition.range * earthCosLat * Math.cos(earthPosition.lon);
+    y = body2.range * bodyCosLat * Math.sin(body2.lon) - earthPosition.range * earthCosLat * Math.sin(earthPosition.lon);
+    z = body2.range * Math.sin(body2.lat) - earthPosition.range * Math.sin(earthPosition.lat);
+    distance2 = Math.hypot(x, y, z);
+  };
+  update();
+  update(modules.base.lightTime(distance2));
+  let lon = Math.atan2(y, x);
+  let lat = Math.atan2(z, Math.hypot(x, y));
+  const [aberrationLon, aberrationLat] = modules.apparent.eclipticAberration(lon, lat, jde);
+  const fk5 = modules.planetposition.toFK5(lon + aberrationLon, lat + aberrationLat, jde);
+  lon = fk5.lon;
+  lat = fk5.lat;
+  const [nutationLon, nutationObliquity] = modules.nutation.nutation(jde);
+  lon = modules.base.pmod(lon + nutationLon, tau);
+  const obliquity = modules.nutation.meanObliquity(jde) + nutationObliquity;
+  const equatorial = new modules.coord.Ecliptic(lon, lat).toEquatorial(obliquity);
+  return {
+    rightAscensionRadians: modules.base.pmod(equatorial.ra, tau),
+    declinationRadians: equatorial.dec,
+    eclipticLongitudeRadians: lon,
+    eclipticLatitudeRadians: lat,
+    distanceAu: distance2
+  };
+};
+var VendorAstronomia = class {
+  provider = vendorRevisions.astronomia;
+  #modules;
+  #earth;
+  #planets;
+  #pluto;
+  constructor(modules, earth, planets3) {
+    this.#modules = modules;
+    this.#earth = earth;
+    this.#planets = planets3;
+    this.#pluto = {
+      position: (jde) => {
+        const value = modules.pluto.heliocentric(jde);
+        const datePosition = modules.precess.eclipticPosition(
+          new modules.coord.Ecliptic(value.lon, value.lat),
+          2e3,
+          modules.base.JDEToJulianYear(jde)
+        );
+        return { lon: datePosition.lon, lat: datePosition.lat, range: value.range };
+      }
+    };
+  }
+  time(utcIso) {
+    const calendar = new this.#modules.julian.CalendarGregorian(finiteDate(utcIso));
+    const julianDay = calendar.toJD();
+    const deltaTSeconds = this.#modules.deltat.deltaT(calendar.toYear());
+    return {
+      julianDay,
+      deltaTSeconds,
+      julianEphemerisDay: julianDay + deltaTSeconds / 86400
+    };
+  }
+  geometry(julianDay, julianEphemerisDay) {
+    const [, nutationObliquity] = this.#modules.nutation.nutation(julianEphemerisDay);
+    return {
+      apparentSiderealDegrees: this.#modules.sidereal.apparent(julianDay) / 240,
+      trueObliquityRadians: this.#modules.nutation.meanObliquity(julianEphemerisDay) + nutationObliquity
+    };
+  }
+  sample(id, jde) {
+    if (id === "sun") {
+      const ecliptic = this.#modules.solar.apparentVSOP87(this.#earth, jde);
+      const equatorial = this.#modules.solar.apparentEquatorialVSOP87(this.#earth, jde);
+      return {
+        rightAscensionRadians: this.#modules.base.pmod(equatorial.ra, tau),
+        declinationRadians: equatorial.dec,
+        eclipticLongitudeRadians: this.#modules.base.pmod(ecliptic.lon, tau),
+        eclipticLatitudeRadians: ecliptic.lat,
+        distanceAu: ecliptic.range
+      };
+    }
+    if (id === "moon") {
+      const mean3 = this.#modules.moon.position(jde);
+      const [nutationLon, nutationObliquity] = this.#modules.nutation.nutation(jde);
+      const lon = this.#modules.base.pmod(mean3.lon + nutationLon, tau);
+      const obliquity = this.#modules.nutation.meanObliquity(jde) + nutationObliquity;
+      const equatorial = new this.#modules.coord.Ecliptic(lon, mean3.lat).toEquatorial(obliquity);
+      return {
+        rightAscensionRadians: this.#modules.base.pmod(equatorial.ra, tau),
+        declinationRadians: equatorial.dec,
+        eclipticLongitudeRadians: lon,
+        eclipticLatitudeRadians: mean3.lat,
+        distanceAu: mean3.range / auKilometres
+      };
+    }
+    return geocentric(
+      id === "pluto" ? this.#pluto : this.#planets[id],
+      this.#earth,
+      jde,
+      this.#modules
+    );
+  }
+};
+var moduleDefault = async (path) => (await loadVendor(path)).default;
+var loadAstronomia = async () => {
+  const [
+    base,
+    apparent2,
+    planetpositionModule,
+    nutation3,
+    sidereal,
+    coord,
+    precess,
+    solar2,
+    moon,
+    pluto,
+    julian,
+    deltat,
+    earthData,
+    mercuryData,
+    venusData,
+    marsData,
+    jupiterData,
+    saturnData,
+    uranusData,
+    neptuneData
+  ] = await Promise.all([
+    moduleDefault("astronomia/base"),
+    moduleDefault("astronomia/apparent"),
+    loadVendor("astronomia/planetposition"),
+    moduleDefault("astronomia/nutation"),
+    moduleDefault("astronomia/sidereal"),
+    moduleDefault("astronomia/coord"),
+    moduleDefault("astronomia/precess"),
+    moduleDefault("astronomia/solar"),
+    moduleDefault("astronomia/moonposition"),
+    moduleDefault("astronomia/pluto"),
+    moduleDefault("astronomia/julian"),
+    moduleDefault("astronomia/deltat"),
+    moduleDefault("astronomia/data/vsop87Bearth"),
+    moduleDefault("astronomia/data/vsop87Bmercury"),
+    moduleDefault("astronomia/data/vsop87Bvenus"),
+    moduleDefault("astronomia/data/vsop87Bmars"),
+    moduleDefault("astronomia/data/vsop87Bjupiter"),
+    moduleDefault("astronomia/data/vsop87Bsaturn"),
+    moduleDefault("astronomia/data/vsop87Buranus"),
+    moduleDefault("astronomia/data/vsop87Bneptune")
+  ]);
+  const planetposition = planetpositionModule.default;
+  const earth = new planetposition.Planet(earthData);
+  const planets3 = {
+    mercury: new planetposition.Planet(mercuryData),
+    venus: new planetposition.Planet(venusData),
+    mars: new planetposition.Planet(marsData),
+    jupiter: new planetposition.Planet(jupiterData),
+    saturn: new planetposition.Planet(saturnData),
+    uranus: new planetposition.Planet(uranusData),
+    neptune: new planetposition.Planet(neptuneData)
+  };
+  return new VendorAstronomia(
+    { base, apparent: apparent2, planetposition, nutation: nutation3, sidereal, coord, precess, solar: solar2, moon, pluto, julian, deltat },
+    earth,
+    planets3
+  );
+};
+
+// src/astro/lunarOrbit.ts
+var radiansToDegrees = 180 / Math.PI;
+var earthMoonMuKm3PerDay2 = (398600.435507 + 4902.800118) * 86400 ** 2;
+var vector = (position6) => {
+  const cosLatitude = Math.cos(position6.lat);
+  return {
+    x: position6.range * cosLatitude * Math.cos(position6.lon),
+    y: position6.range * cosLatitude * Math.sin(position6.lon),
+    z: position6.range * Math.sin(position6.lat)
+  };
+};
+var subtract = (a, b) => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
+var scale = (value, factor) => ({ x: value.x * factor, y: value.y * factor, z: value.z * factor });
+var cross = (a, b) => ({
+  x: a.y * b.z - a.z * b.y,
+  y: a.z * b.x - a.x * b.z,
+  z: a.x * b.y - a.y * b.x
+});
+var magnitude = (value) => Math.hypot(value.x, value.y, value.z);
+var longitude2 = (value) => normaliseDegrees(Math.atan2(value.y, value.x) * radiansToDegrees);
+var polynomial = (t, coefficients) => {
+  let value = 0;
+  for (let index2 = coefficients.length - 1; index2 >= 0; index2 -= 1) value = value * t + coefficients[index2];
+  return value;
+};
+var meanNode = (jde) => {
+  const t = (jde - 2451545) / 36525;
+  return polynomial(t, [125.0445479, -1934.1362891, 20754e-7, 1 / 467441, -1 / 60616e3]);
+};
+var meanApogee = (jde) => {
+  const t = (jde - 2451545) / 36525;
+  const perigee2 = polynomial(t, [83.3532465, 4069.0137287, -0.01032, -1 / 80053, 1 / 18999e3]);
+  return perigee2 + 180;
+};
+var osculating = (moon, jde) => {
+  const step = 1e-3;
+  const current = vector(moon.position(jde));
+  const velocity2 = scale(
+    subtract(vector(moon.position(jde + step)), vector(moon.position(jde - step))),
+    1 / (2 * step)
+  );
+  const angularMomentum = cross(current, velocity2);
+  if (magnitude(angularMomentum) === 0) throw new Error("Lunar state has no angular momentum");
+  const eccentricity2 = subtract(
+    scale(cross(velocity2, angularMomentum), 1 / earthMoonMuKm3PerDay2),
+    scale(current, 1 / magnitude(current))
+  );
+  if (magnitude(eccentricity2) < 1e-9) throw new Error("Lunar osculating apogee is undefined");
+  return {
+    node: normaliseDegrees(Math.atan2(angularMomentum.x, -angularMomentum.y) * radiansToDegrees),
+    apogee: longitude2(scale(eccentricity2, -1))
+  };
+};
+var longitudes = (moon, nutation3, jde) => {
+  const correction = nutation3.nutation(jde)[0] * radiansToDegrees;
+  const trueOrbit = osculating(moon, jde);
+  return {
+    meanNode: normaliseDegrees(meanNode(jde) + correction),
+    trueNode: normaliseDegrees(trueOrbit.node + correction),
+    meanApogee: normaliseDegrees(meanApogee(jde) + correction),
+    trueApogee: normaliseDegrees(trueOrbit.apogee + correction)
+  };
+};
+var signedDelta2 = (after, before) => {
+  const delta = normaliseDegrees(after - before);
+  return delta > 180 ? delta - 360 : delta;
+};
+var AstronomiaLunarOrbit = class {
+  #moon;
+  #nutation;
+  constructor(moon, nutation3) {
+    this.#moon = moon;
+    this.#nutation = nutation3;
+  }
+  sample(jde) {
+    const current = longitudes(this.#moon, this.#nutation, jde);
+    const before = longitudes(this.#moon, this.#nutation, jde - 0.5);
+    const after = longitudes(this.#moon, this.#nutation, jde + 0.5);
+    return {
+      meanNode: { longitudeDegrees: current.meanNode, speedDegreesPerDay: signedDelta2(after.meanNode, before.meanNode) },
+      trueNode: { longitudeDegrees: current.trueNode, speedDegreesPerDay: signedDelta2(after.trueNode, before.trueNode) },
+      meanApogee: { longitudeDegrees: current.meanApogee, speedDegreesPerDay: signedDelta2(after.meanApogee, before.meanApogee) },
+      trueApogee: { longitudeDegrees: current.trueApogee, speedDegreesPerDay: signedDelta2(after.trueApogee, before.trueApogee) }
+    };
+  }
+};
+var moduleDefault2 = async (path) => (await loadVendor(path)).default;
+var loadLunarOrbit = async () => {
+  const [moon, nutation3] = await Promise.all([
+    moduleDefault2("astronomia/moonposition"),
+    moduleDefault2("astronomia/nutation")
+  ]);
+  return new AstronomiaLunarOrbit(moon, nutation3);
+};
+
+// src/eclipse/astronomia.ts
+var solarHalfDurationDays = 3 / 24;
+var finite2 = (value, name) => {
+  if (value === void 0 || !Number.isFinite(value)) throw new Error(`Invalid eclipse ${name}`);
+  return value;
+};
+var typeOf = (kind, raw, api) => {
+  if (raw.type === api.TYPE.None) return null;
+  if (kind === "solar") {
+    if (raw.type === api.TYPE.Partial) return "partial";
+    if (raw.type === api.TYPE.Annular) return "annular";
+    if (raw.type === api.TYPE.AnnularTotal) return "hybrid";
+    if (raw.type === api.TYPE.Total) return "total";
+  } else {
+    if (raw.type === api.TYPE.Penumbral) return "penumbral";
+    if (raw.type === api.TYPE.Umbral) return "partial";
+    if (raw.type === api.TYPE.Total) return "total";
+  }
+  throw new Error(`Unsupported ${kind} eclipse type ${raw.type}`);
+};
+var AstronomiaEclipses = class {
+  provider = vendorRevisions.astronomia;
+  #eclipse;
+  #julian;
+  constructor(eclipse, julian) {
+    this.#eclipse = eclipse;
+    this.#julian = julian;
+  }
+  sample(kind, decimalYear) {
+    const raw = kind === "solar" ? this.#eclipse.solar(decimalYear) : this.#eclipse.lunar(decimalYear);
+    const type = typeOf(kind, raw, this.#eclipse);
+    if (type === null) return null;
+    const activeHalfDurationDays = kind === "solar" ? solarHalfDurationDays : finite2(raw.sdPenumbral, "penumbral semiduration");
+    return {
+      kind,
+      type,
+      julianEphemerisDay: finite2(raw.jdeMax, "maximum JDE"),
+      magnitude: raw.magnitude !== void 0 && Number.isFinite(raw.magnitude) ? raw.magnitude : null,
+      activeHalfDurationDays
+    };
+  }
+  decimalYear(julianEphemerisDay) {
+    return new this.#julian.CalendarGregorian().fromJDE(julianEphemerisDay).toYear();
+  }
+  utcIso(julianEphemerisDay) {
+    return new this.#julian.CalendarGregorian().fromJDE(julianEphemerisDay).toISOString();
+  }
+};
+var moduleDefault3 = async (path) => (await loadVendor(path)).default;
+var loadEclipses = async () => {
+  const [eclipse, julian] = await Promise.all([
+    moduleDefault3("astronomia/eclipse"),
+    moduleDefault3("astronomia/julian")
+  ]);
+  return new AstronomiaEclipses(eclipse, julian);
+};
+
+// src/place/cscData.ts
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+var root = fileURLToPath(new URL("../data/places/data/", import.meta.url));
+var countryDirs = /* @__PURE__ */ new Map();
+var stateDirs = /* @__PURE__ */ new Map();
+var json = async (...parts) => JSON.parse(await readFile(join(root, ...parts), "utf8"));
+var code = (name) => {
+  const at3 = name.lastIndexOf("-");
+  return at3 < 0 ? null : name.slice(at3 + 1).toUpperCase();
+};
+var dirs = async (parts) => {
+  const values2 = /* @__PURE__ */ new Map();
+  for (const item of await readdir(join(root, ...parts), { withFileTypes: true })) {
+    if (!item.isDirectory()) continue;
+    const key2 = code(item.name);
+    if (key2 !== null) values2.set(key2, item.name);
+  }
+  return values2;
+};
+var countryDir = async (countryCode) => {
+  if (countryDirs.size === 0) {
+    for (const [key2, value] of await dirs([])) countryDirs.set(key2, value);
+  }
+  return countryDirs.get(countryCode.toUpperCase()) ?? null;
+};
+var stateDir = async (countryCode, stateCode) => {
+  const cc = countryCode.toUpperCase();
+  const country2 = await countryDir(cc);
+  if (country2 === null) return null;
+  let values2 = stateDirs.get(cc);
+  if (values2 === void 0) {
+    values2 = await dirs([country2]);
+    stateDirs.set(cc, values2);
+  }
+  return values2.get(stateCode.toUpperCase()) ?? null;
+};
+var country = async (countryCode) => {
+  const dir = await countryDir(countryCode);
+  if (dir === null) return null;
+  return { dir, meta: await json(dir, "meta.json") };
+};
+var getStates = async (countryCode) => {
+  const value = await country(countryCode);
+  return value === null ? [] : json(value.dir, "states.json");
+};
+var getCities = async (countryCode, stateCode) => {
+  const country2 = await countryDir(countryCode);
+  const state2 = await stateDir(countryCode, stateCode);
+  return country2 === null || state2 === null ? [] : json(country2, state2, "cities.json");
+};
+var cscData = {
+  getCountries: () => json("countries.json"),
+  async getCountryByCode(countryCode) {
+    return (await country(countryCode))?.meta ?? null;
+  },
+  getStatesOfCountry: getStates,
+  async getStateByCode(countryCode, stateCode) {
+    const wanted = stateCode.toUpperCase();
+    return (await getStates(countryCode)).find((value) => value.iso2.toUpperCase() === wanted) ?? null;
+  },
+  getCitiesOfState: getCities,
+  async getAllCitiesOfCountry(countryCode) {
+    const rows = [];
+    for (const state2 of await getStates(countryCode)) rows.push(...await getCities(countryCode, state2.iso2));
+    return rows;
+  }
+};
+
+// src/place/normalise.ts
+var code2 = (value) => value.trim().toUpperCase();
+var coordinate = (value, name, min, max) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    throw new Error(`${name} is outside its valid range`);
+  }
+  return parsed;
+};
+var zone = (city, region, country2) => {
+  const candidates = [city.timezone, region?.timezone ?? null];
+  if (country2.timezones.length === 1) candidates.push(country2.timezones[0]?.zoneName ?? null);
+  const selected = candidates.find((value) => typeof value === "string" && value.length > 0);
+  if (!selected || !/^[A-Za-z_+.-]+(?:\/[A-Za-z0-9_+.-]+)+$/u.test(selected)) {
+    throw new Error(`City ${city.id} has no usable IANA time zone`);
+  }
+  return selected;
+};
+var placeId = (countryCode, regionCode, cityId) => `csc:${code2(countryCode)}:${regionCode ? code2(regionCode) : "-"}:${cityId}`;
+var parsePlaceId = (id) => {
+  const match = /^csc:([A-Z]{2}):([A-Z0-9-]+|-):(\d+)$/u.exec(id);
+  if (!match) throw new Error("Invalid place ID");
+  const cityId = Number(match[3]);
+  if (!Number.isSafeInteger(cityId) || cityId < 1) throw new Error("Invalid city ID");
+  return {
+    countryCode: match[1],
+    regionCode: match[2] === "-" ? null : match[2],
+    cityId
+  };
+};
+var normalisePlace = (country2, region, city) => {
+  const countryCode = code2(country2.iso2);
+  if (code2(city.country_code) !== countryCode) throw new Error("City country does not match selected country");
+  if (region) {
+    if (code2(region.country_code) !== countryCode) throw new Error("Region country does not match selected country");
+    if (code2(city.state_code) !== code2(region.iso2)) throw new Error("City region does not match selected region");
+  }
+  return {
+    id: placeId(countryCode, region?.iso2 ?? null, city.id),
+    continent: country2.region.trim() || "Unknown",
+    subcontinent: country2.subregion.trim() || null,
+    country: { code: countryCode, name: country2.name },
+    region: region ? { code: code2(region.iso2), name: region.name } : null,
+    city: { name: city.name },
+    latitude: coordinate(city.latitude, "Latitude", -90, 90),
+    longitude: coordinate(city.longitude, "Longitude", -180, 180),
+    elevationMetres: null,
+    timeZone: zone(city, region, country2)
+  };
+};
+
+// src/place/csc.ts
+var fold = (value) => value.normalize("NFKD").replace(new RegExp("\\p{M}", "gu"), "").toLocaleLowerCase("en-GB");
+var order = (items) => items.sort((a, b) => a.name.localeCompare(b.name, "en-GB"));
+var cityZone = (city, region, country2) => {
+  if (city.timezone) return city.timezone;
+  if (region?.timezone) return region.timezone;
+  if (country2.timezones.length === 1 && country2.timezones[0]) return country2.timezones[0].zoneName;
+  return "";
+};
+var CscCatalogue = class {
+  #api;
+  constructor(api) {
+    this.#api = api;
+  }
+  async continents() {
+    return [...new Set((await this.#api.getCountries()).map((country2) => country2.region.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "en-GB"));
+  }
+  async countries(continent) {
+    const selected = continent ? fold(continent) : null;
+    return order((await this.#api.getCountries()).filter((country2) => selected === null || fold(country2.region) === selected).map((country2) => ({
+      code: country2.iso2.toUpperCase(),
+      name: country2.name,
+      continent: country2.region,
+      subcontinent: country2.subregion || null
+    })));
+  }
+  async regions(countryCode) {
+    return order((await this.#api.getStatesOfCountry(countryCode.toUpperCase())).map((region) => ({ code: region.iso2.toUpperCase(), name: region.name })));
+  }
+  async cities(countryCode, regionCode, query) {
+    const cc = countryCode.toUpperCase();
+    const country2 = await this.#api.getCountryByCode(cc);
+    if (!country2) throw new Error(`Unknown country ${cc}`);
+    const region = regionCode ? await this.#api.getStateByCode(cc, regionCode.toUpperCase()) : null;
+    if (regionCode && !region) throw new Error(`Unknown region ${cc}/${regionCode}`);
+    const cities = region ? await this.#api.getCitiesOfState(cc, region.iso2) : await this.#api.getAllCitiesOfCountry(cc);
+    const needle = fold(query.trim());
+    return order(cities.filter((city) => needle.length === 0 || fold(city.name).includes(needle)).map((city) => ({
+      id: placeId(cc, region?.iso2 ?? (city.state_code || null), city.id),
+      name: city.name,
+      region: region ? { code: region.iso2.toUpperCase(), name: region.name } : city.state_code ? { code: city.state_code.toUpperCase(), name: city.state_code.toUpperCase() } : null,
+      latitude: Number(city.latitude),
+      longitude: Number(city.longitude),
+      timeZone: cityZone(city, region, country2)
+    })));
+  }
+  async get(id) {
+    const parsed = parsePlaceId(id);
+    const country2 = await this.#api.getCountryByCode(parsed.countryCode);
+    if (!country2) throw new Error(`Unknown country ${parsed.countryCode}`);
+    const region = parsed.regionCode ? await this.#api.getStateByCode(parsed.countryCode, parsed.regionCode) : null;
+    if (parsed.regionCode && !region) throw new Error(`Unknown region ${parsed.countryCode}/${parsed.regionCode}`);
+    const cities = region ? await this.#api.getCitiesOfState(parsed.countryCode, parsed.regionCode) : await this.#api.getAllCitiesOfCountry(parsed.countryCode);
+    const city = cities.find((candidate2) => candidate2.id === parsed.cityId);
+    if (!city) throw new Error(`Unknown city ${parsed.cityId}`);
+    return normalisePlace(country2, region, city);
+  }
+};
+var loadCscCatalogue = async () => new CscCatalogue(cscData);
+
+// src/time/vendor.ts
+init_js_joda_esm();
+init_js_joda_timezone_esm();
+
+// src/time/jsJoda.ts
+var daylightSaving = (rules, instant) => {
+  if (!rules.isDaylightSavings) return null;
+  try {
+    return rules.isDaylightSavings(instant);
+  } catch {
+    return null;
+  }
+};
+var candidate = (local, offset, rules, fold2) => {
+  const instant = local.toInstant(offset);
+  return {
+    fold: fold2,
+    utcIso: instant.toString(),
+    offsetSeconds: offset.totalSeconds(),
+    daylightSaving: daylightSaving(rules, instant)
+  };
+};
+var JsJodaResolver = class {
+  info;
+  #port;
+  constructor(port, info) {
+    this.#port = port;
+    this.info = { provider: "js-joda", ...info };
+  }
+  resolve(input) {
+    const localIso = `${input.date}T${input.time}`;
+    try {
+      const local = this.#port.localDateTime(localIso);
+      const rules = this.#port.rules(input.zone);
+      const offsets = rules.validOffsets(local);
+      if (offsets.length === 1) return { kind: "exact", localIso, candidate: candidate(local, offsets[0], rules, null) };
+      if (offsets.length === 2) {
+        const candidates = [
+          candidate(local, offsets[0], rules, 0),
+          candidate(local, offsets[1], rules, 1)
+        ];
+        if (input.fold !== void 0) return { kind: "exact", localIso, candidate: candidates[input.fold] };
+        return { kind: "ambiguous", localIso, candidates };
+      }
+      const transition = rules.transition(local);
+      if (!transition) return { kind: "unsupported", localIso, reason: "No offset or transition supplied by provider" };
+      return {
+        kind: "nonexistent",
+        localIso,
+        beforeUtcIso: transition.dateTimeBefore().toInstant(transition.offsetBefore()).toString(),
+        afterUtcIso: transition.dateTimeAfter().toInstant(transition.offsetAfter()).toString()
+      };
+    } catch (error) {
+      return { kind: "unsupported", localIso, reason: error instanceof Error ? error.message : "Unknown time resolver failure" };
+    }
+  }
+};
+
+// src/time/vendor.ts
+var RangeResolver = class {
+  info;
+  #inner;
+  constructor(inner) {
+    this.#inner = inner;
+    this.info = inner.info;
+  }
+  resolve(input) {
+    const year = Number(input.date.slice(0, 4));
+    if (!Number.isInteger(year) || year < 1900 || year > 2100) {
+      return {
+        kind: "unsupported",
+        localIso: `${input.date}T${input.time}`,
+        reason: `Date is outside supported range ${this.info.supportedRange}`
+      };
+    }
+    return this.#inner.resolve(input);
+  }
+};
+var loadTimeResolver = async () => {
+  const port = {
+    localDateTime: (iso) => LocalDateTime.parse(iso),
+    rules: (zone2) => ZoneId.of(zone2).rules()
+  };
+  return new RangeResolver(new JsJodaResolver(port, {
+    providerVersion: vendorRevisions.time.timezoneVersion,
+    dataVersion: vendorRevisions.time.timeZoneDatabaseVersion,
+    supportedRange: vendorRevisions.time.supportedRange,
+    calendar: "proleptic_gregorian"
+  }));
+};
+
+// src/calculate/ports.ts
 var loadPorts = async (version2 = "0.20.0") => {
   const [places, timeResolver, astronomy, lunarOrbit, eclipses] = await Promise.all([
     loadCscCatalogue(),

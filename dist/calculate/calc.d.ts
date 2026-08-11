@@ -4,5 +4,4 @@ import { type CalcOptions, type CalcPorts } from "./types.js";
 export { CalcError, calculationProfile } from "./types.js";
 export type { CalcOptions, CalcPorts } from "./types.js";
 export declare const calc: (input: BirthInput, options: CalcOptions, ports: CalcPorts) => Promise<Calculation>;
-export declare const loadPorts: (version?: string) => Promise<CalcPorts>;
 //# sourceMappingURL=calc.d.ts.map

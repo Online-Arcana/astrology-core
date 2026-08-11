@@ -1,4 +1,5 @@
-import { calc, loadPorts } from "../calculate/calc.js";
+import { calc } from "../calculate/calc.js";
+import { loadPorts } from "../calculate/ports.js";
 import { loadCscCatalogue } from "../place/csc.js";
 const index = (length, rng) => Math.floor(rng() * length);
 const pick = (values, rng) => values[index(values.length, rng)] ?? null;
