@@ -7,6 +7,7 @@
   "license": "MIT",
   "exports": {
     ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./web": { "types": "./dist/web.d.ts", "default": "./dist/web.js" },
     "./wheel": { "types": "./dist/wheel/index.d.ts", "default": "./dist/wheel.js" }
   },
   "files": ["dist", "data", "assets", "styles", "LICENSE"],
