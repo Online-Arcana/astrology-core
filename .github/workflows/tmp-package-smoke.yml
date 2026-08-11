@@ -1,0 +1,29 @@
+name: tmp-package-smoke
+on:
+  push:
+    branches: [agent/split-modules]
+    paths: [.github/workflows/tmp-package-smoke.yml]
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: npm run vendor:build
+      - run: npm install --ignore-scripts
+      - run: npm run build
+      - name: Install packed core in an empty consumer
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/astral-core-consumer
+          npm pack --pack-destination /tmp/astral-core-consumer
+          cd /tmp/astral-core-consumer
+          printf '{"name":"core-consumer","private":true,"type":"module"}\n' > package.json
+          npm install ./astral-core-0.1.0.tgz --ignore-scripts
+          node -e 'import("astral-core").then(m => { if (typeof m.renderSvg !== "function") throw new Error("renderSvg export missing"); console.log("packed astral-core import passed") })'
