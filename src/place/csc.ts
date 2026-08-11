@@ -1,5 +1,5 @@
 import type { PlaceData } from "../types/base.js";
-import { loadVendor } from "../vendor/load.js";
+import { cscData } from "./cscData.js";
 import type { CityChoice, CountryChoice, CscApi, CscCity, CscCountryMeta, CscRegion, PlaceCatalogue, RegionChoice } from "./model.js";
 import { normalisePlace, parsePlaceId, placeId } from "./normalise.js";
 
@@ -85,9 +85,4 @@ export class CscCatalogue implements PlaceCatalogue {
   }
 }
 
-interface CscModule extends CscApi {}
-
-export const loadCscCatalogue = async (): Promise<CscCatalogue> => {
-  const api = await loadVendor<CscModule>("@countrystatecity/countries");
-  return new CscCatalogue(api);
-};
+export const loadCscCatalogue = async (): Promise<CscCatalogue> => new CscCatalogue(cscData);
