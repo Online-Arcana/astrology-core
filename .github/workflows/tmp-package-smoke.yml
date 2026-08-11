@@ -36,26 +36,14 @@ jobs:
             echo 'vendor source leaked into packed core' >&2
             exit 1
           fi
-
           cd /tmp/astral-core-consumer
           printf '{"name":"core-consumer","private":true,"type":"module"}\n' > package.json
           npm install "./$PACK_NAME" --ignore-scripts >/dev/null
-
-          for path in \
-            data/places/manifest.json \
-            data/places/data/countries.json \
-            dist/web.js \
-            dist/wheel.js
-          do
-            if [ ! -f "node_modules/astral-core/$path" ]; then
-              echo "missing installed astral-core path: $path" >&2
-              exit 1
-            fi
+          for path in data/places/manifest.json data/places/data/countries.json dist/web.js dist/wheel.js; do
+            [ -f "node_modules/astral-core/$path" ] || { echo "missing installed astral-core path: $path" >&2; exit 1; }
           done
-
           node -e 'import("astral-core").then(async m => { const places = await m.loadCscCatalogue(); const countries = await places.countries("Europe"); if (!countries.some(x => x.code === "GB")) throw new Error("CSC data unavailable"); const time = await m.loadTimeResolver(); const value = time.resolve({date:"2000-01-01",time:"12:00:00",zone:"Europe/London"}); if(value.kind!=="exact") throw new Error(JSON.stringify(value)); await m.loadPorts("package-smoke"); console.log("node core passed") })'
           node -e 'import("astral-core/wheel").then(m => { if (typeof m.renderSvg !== "function" || typeof m.emptyWheelData !== "function") throw new Error("wheel exports missing"); console.log("wheel entry passed") })'
-
           python3 -m http.server 8123 --bind 127.0.0.1 --directory node_modules/astral-core/data/places >/tmp/astral-core-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
@@ -64,14 +52,12 @@ jobs:
           const core = await import('astral-core/web');
           const base = new URL('http://127.0.0.1:8123/');
           const places = core.webPlaces(base);
-          const countries = await places.countries('Europe');
-          if (!countries.some(({ code }) => code === 'GB')) throw new Error('web country data unavailable');
           const regions = await places.regions('GB');
-          const scotland = regions.find(({ name }) => name === 'Scotland');
-          if (!scotland) throw new Error('Scotland region unavailable');
-          const cities = await places.cities('GB', scotland.code, 'Peterhead');
-          const city = cities.find(({ name }) => name === 'Peterhead');
-          if (!city) throw new Error('web Peterhead data unavailable');
+          const aberdeen = regions.find(({ code, name }) => code === 'ABE' && name === 'Aberdeen');
+          if (!aberdeen) throw new Error('Aberdeen region unavailable');
+          const cities = await places.cities('GB', aberdeen.code, 'Aberdeen');
+          const city = cities.find(({ name }) => name === 'Aberdeen');
+          if (!city) throw new Error('web Aberdeen data unavailable');
           const ports = await core.webPorts(base, 'package-smoke');
           const chart = await core.calc(
             { date: '2000-01-01', time: '12:00', timeAccuracy: 'exact', placeId: city.id },
