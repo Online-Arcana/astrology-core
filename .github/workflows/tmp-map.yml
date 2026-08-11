@@ -1,0 +1,49 @@
+name: tmp-map
+on:
+  push:
+    branches: [agent/split-modules]
+permissions:
+  contents: read
+jobs:
+  map:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          repository: Online-Arcana/astrology
+          ref: 86fadaebccb497930f6a38a4a8f5c4c15b2c2ff6
+          path: astrology
+      - name: Map imports
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          root=Path('astrology/src')
+          core={'aspect','astro','calculate','compat','derived','dignity','eclipse','house','pattern','place','time','zodiac'}
+          rx=re.compile(r'(?:from\s+|import\s*\(\s*)["\']([^"\']+)["\']')
+          def resolve(p,s):
+              if not s.startswith('.'): return s
+              q=(p.parent/s).resolve()
+              try: rel=q.relative_to(root.resolve())
+              except ValueError: return s
+              return str(rel).removesuffix('.js').removesuffix('.ts')
+          edges=set()
+          files=[]
+          for d in sorted(core):
+              for p in sorted((root/d).rglob('*.ts')):
+                  files.append(p.relative_to(root))
+                  text=p.read_text()
+                  for s in rx.findall(text):
+                      r=resolve(p,s)
+                      top=r.split('/',1)[0]
+                      if top not in core and not r.startswith('.'):
+                          edges.add((str(p.relative_to(root)),r))
+          print('CORE FILES',len(files))
+          print('\nCROSS-BOUNDARY IMPORTS')
+          for a,b in sorted(edges): print(f'{a} -> {b}')
+          print('\nTOP-LEVEL COUNTS')
+          from collections import Counter
+          c=Counter(b.split('/',1)[0] for _,b in edges)
+          for k,v in sorted(c.items()): print(k,v)
+          PY
