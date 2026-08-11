@@ -7,8 +7,10 @@ import type { CalcPorts } from "./calculate/types.js";
 
 export * from "./types/index.js";
 export * from "./calculate/calc.js";
+export { compatibilityDomains } from "./compat/catalogue.js";
 export * from "./place/model.js";
 export * from "./place/web.js";
+export { signs } from "./zodiac/position.js";
 
 export const webPorts = async (places: URL, version = "0.20.0"): Promise<CalcPorts> => {
   const [timeResolver, astronomy, lunarOrbit, eclipses] = await Promise.all([
