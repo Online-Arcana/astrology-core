@@ -1,4 +1,4 @@
-name: Bootstrap shared assets
+name: Finalise shared chart wheel package
 
 on:
   push:
@@ -9,29 +9,251 @@ permissions:
   contents: write
 
 jobs:
-  bootstrap:
+  finalise:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - run: |
-          git clone --depth 1 https://github.com/Online-Arcana/astrology.git /tmp/astrology
-          git clone --depth 1 https://github.com/kitty-crow/astral-identicons.git /tmp/astral-identicons
-          rm -rf assets styles reference
-          mkdir -p assets/reed-solomon styles reference
-          cp -a /tmp/astrology/public/assets/astrology-glyphs assets/astrology-glyphs
-          cp -a /tmp/astral-identicons/assets/constellations assets/constellations
-          cp /tmp/astral-identicons/assets/decor/star.svg assets/reed-solomon/star.svg
-          cp /tmp/astrology/public/chart-wheel.css styles/chart-wheel.css
-          cp /tmp/astrology/src/browser/chartWheel.ts reference/chartWheel.astrology.ts
-          cp /tmp/astrology/src/browser/chartWheelGlyphs.ts reference/chartWheelGlyphs.astrology.ts
-          printf '%s\n' \
-            'astrology=591145284610a9b53974eff9ff2bf70453f46835' \
-            'astral-identicons=f933e84095ba0c895629768250181a27cd72d249' \
-            > SOURCE_REVISIONS
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Build behaviour-preserving shared package
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf src dist node_modules
+          mkdir -p src
+
+          cp reference/chartWheel.astrology.ts src/chartWheel.ts
+          cp reference/chartWheelGlyphs.astrology.ts src/chartWheelGlyphs.ts
+
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/chartWheel.ts')
+          text = path.read_text()
+          old = '''import type { Aspect, PointId, Sign } from "../types/astro.js";\nimport type { AstralCalculation } from "../types/file.js";'''
+          new = '''import type { Aspect, ChartWheelCalculation, PointId, Sign } from "./types.js";'''
+          if old not in text:
+              raise SystemExit('expected astrology type imports were not found')
+          text = text.replace(old, new, 1).replace('AstralCalculation', 'ChartWheelCalculation')
+          path.write_text(text)
+          PY
+
+          cat > src/types.ts <<'EOF'
+          export type Sign =
+            | "aries" | "taurus" | "gemini" | "cancer" | "leo" | "virgo"
+            | "libra" | "scorpio" | "sagittarius" | "capricorn" | "aquarius" | "pisces";
+
+          export type PlanetId =
+            | "sun" | "moon" | "mercury" | "venus" | "mars"
+            | "jupiter" | "saturn" | "uranus" | "neptune" | "pluto";
+          export type NodeId =
+            | "north_node_true" | "south_node_true"
+            | "north_node_mean" | "south_node_mean";
+          export type AngleId =
+            | "ascendant" | "descendant" | "midheaven" | "imum_coeli"
+            | "vertex" | "antivertex" | "east_point";
+          export type LotId = "part_of_fortune" | "part_of_spirit";
+          export type OtherPointId = "lilith_mean" | "lilith_true";
+          export type PointId = PlanetId | NodeId | AngleId | LotId | OtherPointId;
+          export type HouseSystem = "placidus" | "whole_sign" | "equal" | "porphyry";
+          export type HouseNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+
+          export interface WheelSignPosition {
+            longitudeDegrees: number;
+          }
+
+          export interface WheelCalculationValue<T> {
+            value: T | null;
+          }
+
+          export interface WheelPoint {
+            position: WheelCalculationValue<WheelSignPosition>;
+          }
+
+          export interface WheelHouse {
+            number: HouseNumber;
+            cusp: WheelCalculationValue<WheelSignPosition>;
+            end: WheelCalculationValue<WheelSignPosition>;
+          }
+
+          export type WheelHouseMap = {
+            "1": WheelHouse; "2": WheelHouse; "3": WheelHouse; "4": WheelHouse;
+            "5": WheelHouse; "6": WheelHouse; "7": WheelHouse; "8": WheelHouse;
+            "9": WheelHouse; "10": WheelHouse; "11": WheelHouse; "12": WheelHouse;
+          };
+
+          export interface WheelHouseChart {
+            status: "calculated" | "fallback" | "unavailable";
+            houses: WheelHouseMap;
+          }
+
+          export type AspectKind =
+            | "conjunction" | "opposition" | "trine" | "square" | "sextile"
+            | "quincunx" | "semisextile" | "semisquare" | "sesquiquadrate"
+            | "quintile" | "biquintile";
+
+          export interface Aspect {
+            id: string;
+            a: PointId;
+            b: PointId;
+            kind: AspectKind;
+            class: "major" | "minor";
+            character: "flowing" | "challenging" | "contextual" | "adjusting" | "creative";
+          }
+
+          export interface ChartWheelCalculation {
+            provenance: {
+              calculationFingerprint: string;
+            };
+            settings: {
+              primaryHouseSystem: HouseSystem;
+            };
+            system: {
+              points: Record<PointId, WheelPoint>;
+              houses: Record<HouseSystem, WheelHouseChart>;
+              aspects: Aspect[];
+            };
+          }
+          EOF
+
+          cat > src/index.ts <<'EOF'
+          export { renderChartWheel } from "./chartWheel.js";
+          export { applyCanonicalWheelGlyphs } from "./chartWheelGlyphs.js";
+          export type {
+            AngleId,
+            Aspect,
+            AspectKind,
+            ChartWheelCalculation,
+            HouseNumber,
+            HouseSystem,
+            LotId,
+            NodeId,
+            OtherPointId,
+            PlanetId,
+            PointId,
+            Sign,
+            WheelCalculationValue,
+            WheelHouse,
+            WheelHouseChart,
+            WheelHouseMap,
+            WheelPoint,
+            WheelSignPosition,
+          } from "./types.js";
+          EOF
+
+          cat > package.json <<'EOF'
+          {
+            "name": "astral-chart-wheel",
+            "version": "0.1.0",
+            "description": "Shared deterministic SVG natal chart wheel renderer and visual assets",
+            "type": "module",
+            "private": true,
+            "exports": {
+              ".": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+              }
+            },
+            "files": ["dist", "assets", "styles", "SOURCE_REVISIONS"],
+            "scripts": {
+              "check": "tsc -p tsconfig.json --noEmit",
+              "build": "rm -rf dist && tsc -p tsconfig.json"
+            },
+            "devDependencies": {
+              "typescript": "5.9.3"
+            }
+          }
+          EOF
+
+          cat > tsconfig.json <<'EOF'
+          {
+            "compilerOptions": {
+              "target": "ES2023",
+              "module": "NodeNext",
+              "moduleResolution": "NodeNext",
+              "lib": ["ES2023", "DOM", "DOM.Iterable"],
+              "strict": true,
+              "exactOptionalPropertyTypes": true,
+              "noUncheckedIndexedAccess": true,
+              "noImplicitOverride": true,
+              "noFallthroughCasesInSwitch": true,
+              "noImplicitReturns": true,
+              "noPropertyAccessFromIndexSignature": true,
+              "useUnknownInCatchVariables": true,
+              "verbatimModuleSyntax": true,
+              "declaration": true,
+              "declarationMap": true,
+              "sourceMap": true,
+              "outDir": "dist",
+              "rootDir": "src",
+              "skipLibCheck": false
+            },
+            "include": ["src/**/*.ts"]
+          }
+          EOF
+
+          cat > .gitignore <<'EOF'
+          node_modules/
+          EOF
+
+          cat > .github/workflows/ci.yml <<'EOF'
+          name: CI
+
+          on:
+            push:
+            pull_request:
+
+          permissions:
+            contents: read
+
+          jobs:
+            verify:
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v6
+                - uses: actions/setup-node@v6
+                  with:
+                    node-version: 22
+                    cache: npm
+                - run: npm ci
+                - run: npm run check
+                - run: npm run build
+                - run: git diff --exit-code -- dist
+          EOF
+
+          cat > README.md <<'EOF'
+          # Astral Chart Wheel
+
+          Shared deterministic SVG chart-wheel rendering components for Online Arcana projects.
+
+          `astral-chart-wheel` owns the visual wheel renderer and the visual assets shared by `Online-Arcana/astrology` and `kitty-crow/astral-identicons`. It does not calculate astronomical positions and it does not encode identity data.
+
+          ## First extraction contract
+
+          The initial extraction is deliberately behaviour-preserving. The renderer is the existing `Online-Arcana/astrology` chart-wheel implementation with only its TypeScript input imports replaced by the structural `ChartWheelCalculation` contract in this package. Its geometry, DOM structure, classes, collision lanes, aspect rendering, glyph selection and browser behaviour are unchanged.
+
+          Shared assets are copied byte-for-byte from the source revisions recorded in `SOURCE_REVISIONS`:
+
+          - `assets/astrology-glyphs/`: the canonical astrology glyph pack previously owned by `Online-Arcana/astrology`, including zodiac, planet, angle, node and point SVGs.
+          - `assets/constellations/`: the twelve artistic constellation SVGs previously owned by `kitty-crow/astral-identicons`.
+          - `assets/reed-solomon/star.svg`: the star SVG used by the identicon Reed-Solomon visual layer.
+          - `styles/chart-wheel.css`: the current chart-wheel stylesheet from `Online-Arcana/astrology`.
+
+          Consumers pin this repository as `vendor/astral-chart-wheel`. Existing application-facing paths may be mirrored into their build output so this extraction does not change URLs or rendering.
+          EOF
+
+          npm install --ignore-scripts
+          npm run check
+          npm run build
+
+          rm -rf reference
+          rm -f .github/workflows/bootstrap-assets.yml
+
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets styles reference SOURCE_REVISIONS
-          git commit -m 'Extract shared chart wheel assets'
+          git add -A
+          git commit -m 'Create shared chart wheel package'
           git push
