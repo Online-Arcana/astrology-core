@@ -1,3 +1,4 @@
+# rerun after calculation port separation
 name: tmp-migrate-regression-tests
 on:
   push:
@@ -58,6 +59,7 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git rm .github/workflows/tmp-migrate-regression-tests.yml
           git add package.json tsconfig.test.json test/*.ts
+          git add -f dist
           git commit -m "Restore deterministic regression suite"
           git fetch origin agent/split-modules
           git rebase origin/agent/split-modules
