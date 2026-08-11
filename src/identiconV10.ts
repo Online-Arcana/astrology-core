@@ -143,7 +143,11 @@ async function glyph(
   rotation = 0,
   modifier?: string,
 ): Promise<string> {
-  const parsed = parseSvg(await assets.astrologyGlyph(path));
+  const load = assets.astrologyGlyph;
+  if (load === undefined) {
+    throw new Error("v10 chart identicons require astrology chart glyph assets");
+  }
+  const parsed = parseSvg(await load(path));
   const body = monochrome(scopeIds(parsed.body, prefix), colour);
   const image = nestedSvg(
     body,
