@@ -31,3 +31,4 @@ jobs:
           git add -f dist
           git commit -m "Regenerate astral-core package state"
           git push origin HEAD:agent/split-modules
+          # Triggered after browser catalogue export update.
