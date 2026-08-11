@@ -37,6 +37,8 @@ export * from "./compat/rank.js";
 export * from "./compat/catalogue.js";
 export * from "./compat/calculate.js";
 export * from "./wheel/types.js";
+export * from "./wheel/geometry.js";
+export * from "./wheel/svg.js";
 export * from "./wheel/render.js";
 export * from "./wheel/glyphs.js";
 export * from "./wheel/visibility.js";

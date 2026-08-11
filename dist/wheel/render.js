@@ -1,37 +1,6 @@
+import { aspectSegment, forward as forwardDistance, normalise, pointGlyphs as pointFallback, pointLayout, polar, sector as sectorPath, signGlyphs, signOrder, titleCase, wheelCentre as centre, wheelRadii as radii, wheelSize as size } from "./geometry.js";
 const svgNamespace = "http://www.w3.org/2000/svg";
-const size = 800;
-const centre = size / 2;
-const radii = {
-    outer: 372,
-    zodiacInner: 316,
-    pointBase: 286,
-    houseOuter: 254,
-    aspect: 210,
-};
 let wheelInstance = 0;
-const signOrder = [
-    "aries", "taurus", "gemini", "cancer", "leo", "virgo",
-    "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces",
-];
-const signGlyphs = {
-    aries: "♈︎", taurus: "♉︎", gemini: "♊︎", cancer: "♋︎",
-    leo: "♌︎", virgo: "♍︎", libra: "♎︎", scorpio: "♏︎",
-    sagittarius: "♐︎", capricorn: "♑︎", aquarius: "♒︎", pisces: "♓︎",
-};
-const pointFallback = {
-    sun: "☉", moon: "☽", mercury: "☿", venus: "♀︎", mars: "♂︎",
-    jupiter: "♃", saturn: "♄", uranus: "♅", neptune: "♆", pluto: "♇",
-    north_node_true: "T", south_node_true: "T", north_node_mean: "M", south_node_mean: "M",
-    ascendant: "As", descendant: "Ds", midheaven: "Mc", imum_coeli: "IC",
-    vertex: "Vx", antivertex: "AV", east_point: "Ep",
-    part_of_fortune: "⊗", part_of_spirit: "Φ", lilith_mean: "⚸", lilith_true: "⚸",
-};
-const titleCase = (value) => value
-    .replaceAll("_", " ")
-    .replace(/(^|\s)\p{L}/gu, (letter) => letter.toLocaleUpperCase("en-GB"));
-const normalise = (degrees) => ((degrees % 360) + 360) % 360;
-const forwardDistance = (start, end) => normalise(end - start);
-const radians = (degrees) => degrees * Math.PI / 180;
 const svg = (name) => document.createElementNS(svgNamespace, name);
 const addGlyphColourFilter = (root) => {
     const id = `wheelGlyphColour${++wheelInstance}`;
@@ -55,35 +24,6 @@ const addGlyphColourFilter = (root) => {
     definitions.append(filter);
     root.append(definitions);
     return id;
-};
-const screenAngle = (longitude, ascendant) => Math.PI - radians(normalise(longitude - ascendant));
-const polar = (longitude, radius, ascendant) => {
-    const angle = screenAngle(longitude, ascendant);
-    return {
-        x: centre + radius * Math.cos(angle),
-        y: centre + radius * Math.sin(angle),
-    };
-};
-const sectorPath = (start, end, inner, outer, ascendant) => {
-    const distance = Math.max(0.01, forwardDistance(start, end));
-    const steps = Math.max(3, Math.ceil(distance / 3));
-    const outerPoints = [];
-    const innerPoints = [];
-    for (let index = 0; index <= steps; index += 1) {
-        const longitude = normalise(start + distance * index / steps);
-        outerPoints.push(polar(longitude, outer, ascendant));
-        innerPoints.push(polar(longitude, inner, ascendant));
-    }
-    const first = outerPoints[0];
-    if (first === undefined)
-        return "";
-    const commands = [`M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`];
-    for (const point of outerPoints.slice(1))
-        commands.push(`L ${point.x.toFixed(3)} ${point.y.toFixed(3)}`);
-    for (const point of innerPoints.reverse())
-        commands.push(`L ${point.x.toFixed(3)} ${point.y.toFixed(3)}`);
-    commands.push("Z");
-    return commands.join(" ");
 };
 const line = (parent, longitude, fromRadius, toRadius, ascendant, className) => {
     const from = polar(longitude, fromRadius, ascendant);
@@ -154,55 +94,6 @@ const addAssetGlyph = (parent, path, fallback, x, y, glyphSize, glyphFilterId, r
         parent.append(marker);
     }
 };
-const pointLayout = (calculation) => {
-    const points = Object.entries(calculation.points)
-        .flatMap(([rawId, point]) => point.position.value === null
-        ? []
-        : [{ id: rawId, longitude: point.position.value.longitudeDegrees }])
-        .sort((left, right) => left.longitude - right.longitude || left.id.localeCompare(right.id));
-    const lastByLane = [null, null, null, null, null];
-    return points.map((point) => {
-        let selected = 0;
-        for (let lane = 0; lane < lastByLane.length; lane += 1) {
-            const previous = lastByLane[lane];
-            if (previous === undefined || previous === null || forwardDistance(previous, point.longitude) >= 6.5) {
-                selected = lane;
-                break;
-            }
-            selected = Math.min(lane + 1, lastByLane.length - 1);
-        }
-        lastByLane[selected] = point.longitude;
-        return { ...point, lane: selected };
-    });
-};
-const shortenSegment = (start, end, padding) => {
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    const length = Math.hypot(dx, dy);
-    if (length < 0.001)
-        return { start, end };
-    const inset = Math.min(padding, Math.max(0, length / 2 - 2));
-    const ux = dx / length;
-    const uy = dy / length;
-    return {
-        start: { x: start.x + ux * inset, y: start.y + uy * inset },
-        end: { x: end.x - ux * inset, y: end.y - uy * inset },
-    };
-};
-const extendSegment = (start, end, extension) => {
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    const length = Math.hypot(dx, dy);
-    if (length < 0.001)
-        return { start, end };
-    const ux = dx / length;
-    const uy = dy / length;
-    return {
-        start: { x: start.x - ux * extension, y: start.y - uy * extension },
-        end: { x: end.x + ux * extension, y: end.y + uy * extension },
-    };
-};
-const aspectSegment = (aspect, start, end) => aspect.kind === "conjunction" ? extendSegment(start, end, 18) : shortenSegment(start, end, 15);
 const setSegment = (element, segment) => {
     element.setAttribute("x1", segment.start.x.toFixed(3));
     element.setAttribute("y1", segment.start.y.toFixed(3));
