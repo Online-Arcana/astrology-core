@@ -1,6 +1,10 @@
 export { renderChartWheel } from "./chartWheel.js";
 export { applyCanonicalWheelGlyphs } from "./chartWheelGlyphs.js";
 export {
+  setChartWheelPointVisibility,
+  setChartWheelPointsVisibility,
+} from "./chartWheelVisibility.js";
+export {
   defaultLiteralSignGridGeometry,
   literalSignGridPlacements,
 } from "./literalSignGrid.js";
@@ -9,6 +13,21 @@ export type {
   LiteralSignGridPlacement,
   LiteralSignIdentity,
 } from "./literalSignGrid.js";
+export {
+  renderAstralIdenticonV8,
+  renderAstralIdenticonV9,
+} from "./identiconWheel.js";
+export type {
+  AstralIdenticonAssetSource,
+  AstralIdenticonInput,
+  AstralIdenticonPalette,
+  AstralIdenticonPlanetState,
+  AstralIdenticonTracedGlyph,
+  AstralIdenticonV8NorthStar,
+  AstralIdenticonV8RecoveryStar,
+  AstralIdenticonV8Request,
+  AstralIdenticonV9Request,
+} from "./identiconWheel.js";
 export {
   chartWheelCalculationFromPublicMeta,
   renderPublicChartWheel,
