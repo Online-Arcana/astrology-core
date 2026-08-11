@@ -106,3 +106,4 @@ export function ringSigns(value, signs, foreground) {
         return placedSvg(body, asset.viewBox, placement.x, placement.y, placement.size, `data-role="${escapeXml(placement.role)}" data-sign="${placement.sign}"`, placement.angle);
     }).join("\n");
 }
+//# sourceMappingURL=identiconCommon.js.map

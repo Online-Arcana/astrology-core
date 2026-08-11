@@ -7,3 +7,4 @@ import type { PointId } from "./types.js";
  */
 export declare function setChartWheelPointVisibility(wheel: HTMLElement, pointId: PointId, visible: boolean): void;
 export declare function setChartWheelPointsVisibility(wheel: HTMLElement, visibility: Readonly<Partial<Record<PointId, boolean>>>): void;
+//# sourceMappingURL=chartWheelVisibility.d.ts.map

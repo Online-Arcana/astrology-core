@@ -81,3 +81,4 @@ export interface AstralIdenticonV8Request {
     readonly codeSectorCount: number;
     readonly codeSymbolSpacing: number;
 }
+//# sourceMappingURL=identiconTypes.d.ts.map

@@ -35,3 +35,4 @@ export async function renderAstralIdenticonV9(request, assets) {
 </svg>
 `;
 }
+//# sourceMappingURL=identiconV9.js.map

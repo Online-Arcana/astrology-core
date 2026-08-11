@@ -173,3 +173,4 @@ export async function renderAstralIdenticonV8(request, assets) {
 </svg>
 `;
 }
+//# sourceMappingURL=identiconV8.js.map

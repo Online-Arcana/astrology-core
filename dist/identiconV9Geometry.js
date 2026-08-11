@@ -388,3 +388,4 @@ export function parityLayer(parityBytes, colour) {
     </g>`;
     }).join("\n");
 }
+//# sourceMappingURL=identiconV9Geometry.js.map
