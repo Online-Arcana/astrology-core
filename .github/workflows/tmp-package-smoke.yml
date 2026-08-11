@@ -1,4 +1,4 @@
-# temporary core package validation after regression migration
+# final astral-core split package validation
 name: tmp-package-smoke
 on:
   push:
