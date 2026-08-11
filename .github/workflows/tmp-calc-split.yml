@@ -104,6 +104,7 @@ jobs:
           import { detectAspects, type AspectPoint } from "../aspect/detect.js";
           import { calculateDerived } from "../derived/calculate.js";
           import { calculateEclipses } from "../eclipse/calculate.js";
+          import type { AuxiliaryAngles, CoreAngles } from "../house/angles.js";
           import { unavailableHouseCharts } from "../house/chart.js";
           import { detectPatterns, type PatternPoint } from "../pattern/detect.js";
           import type { Calc } from "../types/base.js";
