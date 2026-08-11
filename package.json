@@ -4,13 +4,14 @@
   "description": "Shared deterministic SVG natal chart wheel renderer and visual assets",
   "type": "module",
   "private": true,
+  "license": "MIT",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist", "assets", "styles", "SOURCE_REVISIONS"],
+  "files": ["dist", "assets", "styles", "SOURCE_REVISIONS", "LICENSE"],
   "scripts": {
     "check": "tsc -p tsconfig.json --noEmit",
     "build": "rm -rf dist && tsc -p tsconfig.json"
