@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { CscApi, CscCity, CscCountry, CscCountryMeta, CscRegion } from "./model.js";
 
-const root = fileURLToPath(new URL("../../data/places/", import.meta.url));
+const root = fileURLToPath(new URL("../data/places/", import.meta.url));
 const countryDirs = new Map<string, string>();
 const stateDirs = new Map<string, Map<string, string>>();
 
@@ -50,6 +50,17 @@ const country = async (countryCode: string): Promise<{ dir: string; meta: CscCou
   return { dir, meta: await json<CscCountryMeta>(dir, "meta.json") };
 };
 
+const getStates = async (countryCode: string): Promise<CscRegion[]> => {
+  const value = await country(countryCode);
+  return value === null ? [] : json<CscRegion[]>(value.dir, "states.json");
+};
+
+const getCities = async (countryCode: string, stateCode: string): Promise<CscCity[]> => {
+  const country = await countryDir(countryCode);
+  const state = await stateDir(countryCode, stateCode);
+  return country === null || state === null ? [] : json<CscCity[]>(country, state, "cities.json");
+};
+
 export const cscData: CscApi = {
   getCountries: () => json<CscCountry[]>("countries.json"),
 
@@ -57,27 +68,18 @@ export const cscData: CscApi = {
     return (await country(countryCode))?.meta ?? null;
   },
 
-  async getStatesOfCountry(countryCode) {
-    const value = await country(countryCode);
-    return value === null ? [] : json<CscRegion[]>(value.dir, "states.json");
-  },
+  getStatesOfCountry: getStates,
 
   async getStateByCode(countryCode, stateCode) {
-    const code = stateCode.toUpperCase();
-    return (await this.getStatesOfCountry(countryCode)).find((value) => value.iso2.toUpperCase() === code) ?? null;
+    const wanted = stateCode.toUpperCase();
+    return (await getStates(countryCode)).find((value) => value.iso2.toUpperCase() === wanted) ?? null;
   },
 
-  async getCitiesOfState(countryCode, stateCode) {
-    const country = await countryDir(countryCode);
-    const state = await stateDir(countryCode, stateCode);
-    return country === null || state === null ? [] : json<CscCity[]>(country, state, "cities.json");
-  },
+  getCitiesOfState: getCities,
 
   async getAllCitiesOfCountry(countryCode) {
     const rows: CscCity[] = [];
-    for (const state of await this.getStatesOfCountry(countryCode)) {
-      rows.push(...await this.getCitiesOfState(countryCode, state.iso2));
-    }
+    for (const state of await getStates(countryCode)) rows.push(...await getCities(countryCode, state.iso2));
     return rows;
   },
 };
