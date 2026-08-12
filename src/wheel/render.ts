@@ -1,8 +1,13 @@
 import type { PointId, Sign, WheelData } from "./types.js";
 import { aspectSegment, forward as forwardDistance, normalise, pointGlyphs as pointFallback, pointLayout, polar, sector as sectorPath, signGlyphs, signOrder, titleCase, wheelCentre as centre, wheelRadii as radii, wheelSize as size, type Anchor as WheelPointAnchor } from "./geometry.js";
+import { pointGlyphPredicate, signGlyphVisible, type WheelGlyphs } from "./visibility.js";
 
 const svgNamespace = "http://www.w3.org/2000/svg";
 let wheelInstance = 0;
+
+export interface WheelRenderOptions {
+  glyphs?: WheelGlyphs;
+}
 
 const svg = <K extends keyof SVGElementTagNameMap>(name: K): SVGElementTagNameMap[K] =>
   document.createElementNS(svgNamespace, name);
@@ -132,7 +137,7 @@ const setSegment = (
   element.setAttribute("y2", segment.end.y.toFixed(3));
 };
 
-export const renderWheel = (calculation: WheelData): HTMLElement => {
+export const renderWheel = (calculation: WheelData, options: WheelRenderOptions = {}): HTMLElement => {
   const container = document.createElement("section");
   container.className = "chart-wheel";
   container.dataset["fingerprint"] = calculation.fingerprint;
@@ -173,11 +178,14 @@ export const renderWheel = (calculation: WheelData): HTMLElement => {
     sector.dataset["sign"] = sign;
     zodiacGroup.append(sector);
 
-    const glyphPoint = polar(normalise(start + 15), (radii.zodiacInner + radii.outer) / 2, ascendant);
-    const glyphGroup = svg("g");
-    glyphGroup.setAttribute("class", "wheel-sign-glyph");
-    addAssetGlyph(glyphGroup, signAsset(sign), signGlyphs[sign], glyphPoint.x, glyphPoint.y, 31, glyphFilterId);
-    zodiacGroup.append(glyphGroup);
+    if (signGlyphVisible(sign, options.glyphs)) {
+      const glyphPoint = polar(normalise(start + 15), (radii.zodiacInner + radii.outer) / 2, ascendant);
+      const glyphGroup = svg("g");
+      glyphGroup.setAttribute("class", "wheel-sign-glyph");
+      glyphGroup.dataset["sign"] = sign;
+      addAssetGlyph(glyphGroup, signAsset(sign), signGlyphs[sign], glyphPoint.x, glyphPoint.y, 31, glyphFilterId);
+      zodiacGroup.append(glyphGroup);
+    }
   }
 
   for (let longitude = 0; longitude < 360; longitude += 5) {
@@ -214,7 +222,8 @@ export const renderWheel = (calculation: WheelData): HTMLElement => {
     }
   }
 
-  const placedPoints = pointLayout(calculation);
+  const pointVisible = pointGlyphPredicate(options.glyphs);
+  const placedPoints = pointLayout(calculation, pointVisible);
   const pointAnchors = new Map<PointId, WheelPointAnchor>();
   for (const placed of placedPoints) {
     const radius = radii.pointBase - placed.lane * 24;
