@@ -1,4 +1,4 @@
-# astral-core
+# astrology-core
 
 Deterministic astrology calculation and chart-wheel rendering.
 
