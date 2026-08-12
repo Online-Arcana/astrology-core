@@ -1,0 +1,31 @@
+name: Build dist artifact
+
+on:
+  push:
+    branches:
+      - agent/glyph-visibility
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm run vendor:build
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: npm test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generated-dist
+          path: dist
+          if-no-files-found: error
