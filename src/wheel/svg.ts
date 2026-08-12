@@ -1,5 +1,6 @@
 import type { PointId, Sign, WheelData } from "./types.js";
 import { aspectSegment, anchors, forward, normalise, pointGlyphs, pointLayout, polar, sector, signGlyphs, signOrder, titleCase, wheelCentre, wheelRadii, wheelSize } from "./geometry.js";
+import { pointGlyphPredicate, signGlyphVisible, type WheelGlyphs } from "./visibility.js";
 
 export interface SvgAssets { glyph(path: string): Promise<string>; }
 export interface SvgTheme { background: string; ink: string; muted: string; line: string; accent: string; }
@@ -9,6 +10,8 @@ export interface SvgOptions {
   aspects?: boolean;
   inner?: string;
   attrs?: Readonly<Record<string, string>>;
+  /** Controls zodiac and chart-point glyphs before point layout is calculated. */
+  glyphs?: WheelGlyphs;
   /** Orientation used when a caller deliberately renders an untimed/shell wheel. */
   orientationDegrees?: number;
   /** Set false when an untimed shell should stay visually empty in the centre. */
@@ -55,11 +58,20 @@ export const renderSvg = async (data: WheelData, options: SvgOptions = {}): Prom
   out.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${wheelSize} ${wheelSize}"${attrs}>`);
   out.push(`<style>text{fill:${theme.ink};font-family:system-ui,sans-serif}.frame,.tick,.cusp,.leader{fill:none;stroke:${theme.line}}.frame{stroke-width:2}.zodiac{fill:none;stroke:${theme.line};stroke-width:1}.house{fill:none;stroke:${theme.muted};stroke-width:.7}.aspect{stroke:${theme.muted};stroke-width:1.2;opacity:.72}.point{fill:${theme.ink}}.leader{stroke-width:.7}.tick{stroke-width:.8}</style>`);
   out.push(`<rect width="800" height="800" fill="${theme.background}"/><circle class="frame" cx="${wheelCentre}" cy="${wheelCentre}" r="${wheelRadii.outer}"/>`);
-  for (let i=0;i<signOrder.length;i+=1) { const sign=signOrder[i] as Sign; const start=i*30; out.push(`<path class="zodiac" d="${sector(start,start+30,wheelRadii.zodiacInner,wheelRadii.outer,asc)}"/>`); const p=polar(start+15,(wheelRadii.zodiacInner+wheelRadii.outer)/2,asc); out.push(await image(options.assets,`assets/astrology-glyphs/svg/zodiac/${sign}.svg`,signGlyphs[sign],p.x,p.y,31)); }
+  for (let i=0;i<signOrder.length;i+=1) {
+    const sign=signOrder[i] as Sign;
+    const start=i*30;
+    out.push(`<path class="zodiac" data-sign="${sign}" d="${sector(start,start+30,wheelRadii.zodiacInner,wheelRadii.outer,asc)}"/>`);
+    if (signGlyphVisible(sign, options.glyphs)) {
+      const p=polar(start+15,(wheelRadii.zodiacInner+wheelRadii.outer)/2,asc);
+      out.push(`<g class="zodiac-glyph" data-sign="${sign}">${await image(options.assets,`assets/astrology-glyphs/svg/zodiac/${sign}.svg`,signGlyphs[sign],p.x,p.y,31)}</g>`);
+    }
+  }
   for(let longitude=0;longitude<360;longitude+=5) out.push(line(longitude, longitude%30===0?wheelRadii.outer-14:wheelRadii.outer-7,wheelRadii.outer,asc,"tick"));
   const house=data.houses[data.primaryHouseSystem];
   if(timed&&house.status!=="unavailable") for(const h of Object.values(house.houses)){const c=h.cusp.value,e=h.end.value;if(c===null||e===null)continue;out.push(`<path class="house" d="${sector(c.longitudeDegrees,e.longitudeDegrees,wheelRadii.aspect,wheelRadii.zodiacInner,asc)}"/>`);out.push(line(c.longitudeDegrees,wheelRadii.aspect,wheelRadii.zodiacInner,asc,"cusp"));const middle=normalise(c.longitudeDegrees+forward(c.longitudeDegrees,e.longitudeDegrees)/2);const p=polar(middle,233,asc);out.push(`<text x="${p.x.toFixed(3)}" y="${(p.y+5).toFixed(3)}" text-anchor="middle" font-size="13">${h.number}</text>`);}
-  const placed=pointLayout(data); const pointAnchors=anchors(data,asc);
+  const pointVisible=pointGlyphPredicate(options.glyphs);
+  const placed=pointLayout(data,pointVisible); const pointAnchors=anchors(data,asc,pointVisible);
   if(options.aspects!==false) for(const aspect of data.aspects){const a=pointAnchors.get(aspect.a),b=pointAnchors.get(aspect.b);if(a===undefined||b===undefined)continue;const s=aspectSegment(aspect,a,b);out.push(`<line class="aspect" data-aspect="${esc(aspect.id)}" x1="${s.start.x.toFixed(3)}" y1="${s.start.y.toFixed(3)}" x2="${s.end.x.toFixed(3)}" y2="${s.end.y.toFixed(3)}"/>`);}
   if(options.inner!==undefined) out.push(`<g class="wheel-inner">${options.inner}</g>`);
   for(const p of placed){const point=data.points[p.id],position=point.position.value,at=pointAnchors.get(p.id);if(position===null||at===undefined)continue;const radius=wheelRadii.pointBase-p.lane*24;out.push(line(p.longitude,wheelRadii.zodiacInner-3,radius+16,asc,"leader"));out.push(line(p.longitude,wheelRadii.zodiacInner-10,wheelRadii.zodiacInner+1,asc,"tick"));const asset=assetPath(p.id);out.push(`<g class="point" data-point="${p.id}" data-anchor-x="${at.x.toFixed(3)}" data-anchor-y="${at.y.toFixed(3)}">${asset===null?`<text x="${at.x.toFixed(3)}" y="${(at.y+8).toFixed(3)}" text-anchor="middle" font-size="20">${esc(pointGlyphs[p.id]??titleCase(p.id).slice(0,2))}</text>`:await image(options.assets,asset.path,pointGlyphs[p.id]??"•",at.x,at.y,29,asset.rotation??0,asset.modifier)}</g>`);}
