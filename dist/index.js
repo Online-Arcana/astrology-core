@@ -64822,8 +64822,12 @@ var sector = (start, end, inner, outer, ascendant) => {
   commands.push("Z");
   return commands.join(" ");
 };
-var pointLayout = (data2) => {
-  const points = Object.entries(data2.points).flatMap(([rawId, point2]) => point2.position.value === null ? [] : [{ id: rawId, longitude: point2.position.value.longitudeDegrees }]).sort((left, right) => left.longitude - right.longitude || left.id.localeCompare(right.id));
+var allPoints = () => true;
+var pointLayout = (data2, visible = allPoints) => {
+  const points = Object.entries(data2.points).flatMap(([rawId, point2]) => {
+    const id = rawId;
+    return point2.position.value === null || !visible(id) ? [] : [{ id, longitude: point2.position.value.longitudeDegrees }];
+  }).sort((left, right) => left.longitude - right.longitude || left.id.localeCompare(right.id));
   const last2 = [null, null, null, null, null];
   return points.map((point2) => {
     let lane = 0;
@@ -64859,7 +64863,87 @@ var extend = (start, end, amount) => {
   return { start: { x: start.x - ux * amount, y: start.y - uy * amount }, end: { x: end.x + ux * amount, y: end.y + uy * amount } };
 };
 var aspectSegment = (aspect, start, end) => aspect.kind === "conjunction" ? extend(start, end, 18) : shorten(start, end, 15);
-var anchors = (data2, ascendant) => new Map(pointLayout(data2).map((point2) => [point2.id, polar(point2.longitude, wheelRadii.pointBase - point2.lane * 24, ascendant)]));
+var anchors = (data2, ascendant, visible = allPoints) => new Map(pointLayout(data2, visible).map((point2) => [point2.id, polar(point2.longitude, wheelRadii.pointBase - point2.lane * 24, ascendant)]));
+
+// src/wheel/visibility.ts
+var wheelPointCollections = {
+  planets: [
+    "sun",
+    "moon",
+    "mercury",
+    "venus",
+    "mars",
+    "jupiter",
+    "saturn",
+    "uranus",
+    "neptune",
+    "pluto"
+  ],
+  nodes: [
+    "north_node_true",
+    "south_node_true",
+    "north_node_mean",
+    "south_node_mean"
+  ],
+  angles: [
+    "ascendant",
+    "descendant",
+    "midheaven",
+    "imum_coeli",
+    "vertex",
+    "antivertex",
+    "east_point"
+  ],
+  lots: ["part_of_fortune", "part_of_spirit"],
+  lilith: ["lilith_mean", "lilith_true"]
+};
+var collectionByPoint = /* @__PURE__ */ new Map();
+for (const [collection, pointIds4] of Object.entries(wheelPointCollections)) {
+  for (const pointId of pointIds4) collectionByPoint.set(pointId, collection);
+}
+var baseVisibility = (glyphs) => {
+  if (glyphs === false) return false;
+  if (glyphs === true || glyphs === void 0) return true;
+  return glyphs.default ?? true;
+};
+var pointGlyphCollection = (pointId) => collectionByPoint.get(pointId) ?? null;
+var pointGlyphVisible = (pointId, glyphs) => {
+  if (typeof glyphs === "boolean" || glyphs === void 0) return baseVisibility(glyphs);
+  const individual = glyphs.points?.[pointId];
+  if (individual !== void 0) return individual;
+  const collection = pointGlyphCollection(pointId);
+  const grouped = collection === null ? void 0 : glyphs.collections?.[collection];
+  return grouped ?? baseVisibility(glyphs);
+};
+var signGlyphVisible = (sign, glyphs) => {
+  if (typeof glyphs === "boolean" || glyphs === void 0) return baseVisibility(glyphs);
+  const individual = glyphs.signs?.[sign];
+  if (individual !== void 0) return individual;
+  return glyphs.collections?.zodiac ?? baseVisibility(glyphs);
+};
+var pointGlyphPredicate = (glyphs) => (pointId) => pointGlyphVisible(pointId, glyphs);
+var pointElement = (wheel, pointId) => wheel.querySelector(`.wheel-point[data-point="${pointId}"]`);
+function setChartWheelPointVisibility(wheel, pointId, visible) {
+  const point2 = pointElement(wheel, pointId);
+  if (point2 === null) return;
+  point2.style.display = visible ? "" : "none";
+  point2.setAttribute("aria-hidden", String(!visible));
+  point2.setAttribute("tabindex", visible ? "0" : "-1");
+  if (!visible) {
+    point2.classList.remove("is-active", "wheel-tooltip-active", "wheel-tooltip-endpoint");
+  }
+}
+function setChartWheelPointsVisibility(wheel, visibility) {
+  for (const [rawPointId, visible] of Object.entries(visibility)) {
+    if (visible === void 0) continue;
+    setChartWheelPointVisibility(wheel, rawPointId, visible);
+  }
+}
+function setChartWheelCollectionVisibility(wheel, collection, visible) {
+  for (const pointId of wheelPointCollections[collection]) {
+    setChartWheelPointVisibility(wheel, pointId, visible);
+  }
+}
 
 // src/wheel/svg.ts
 var defaults = { background: "#101019", ink: "#f7f3ff", muted: "#aaa1c0", line: "#6f6684", accent: "#d6c7ff" };
@@ -64922,9 +65006,11 @@ var renderSvg = async (data2, options = {}) => {
   for (let i = 0; i < signOrder.length; i += 1) {
     const sign = signOrder[i];
     const start = i * 30;
-    out.push(`<path class="zodiac" d="${sector(start, start + 30, wheelRadii.zodiacInner, wheelRadii.outer, asc)}"/>`);
-    const p = polar(start + 15, (wheelRadii.zodiacInner + wheelRadii.outer) / 2, asc);
-    out.push(await image(options.assets, `assets/astrology-glyphs/svg/zodiac/${sign}.svg`, signGlyphs[sign], p.x, p.y, 31));
+    out.push(`<path class="zodiac" data-sign="${sign}" d="${sector(start, start + 30, wheelRadii.zodiacInner, wheelRadii.outer, asc)}"/>`);
+    if (signGlyphVisible(sign, options.glyphs)) {
+      const p = polar(start + 15, (wheelRadii.zodiacInner + wheelRadii.outer) / 2, asc);
+      out.push(`<g class="zodiac-glyph" data-sign="${sign}">${await image(options.assets, `assets/astrology-glyphs/svg/zodiac/${sign}.svg`, signGlyphs[sign], p.x, p.y, 31)}</g>`);
+    }
   }
   for (let longitude3 = 0; longitude3 < 360; longitude3 += 5) out.push(line(longitude3, longitude3 % 30 === 0 ? wheelRadii.outer - 14 : wheelRadii.outer - 7, wheelRadii.outer, asc, "tick"));
   const house2 = data2.houses[data2.primaryHouseSystem];
@@ -64937,8 +65023,9 @@ var renderSvg = async (data2, options = {}) => {
     const p = polar(middle, 233, asc);
     out.push(`<text x="${p.x.toFixed(3)}" y="${(p.y + 5).toFixed(3)}" text-anchor="middle" font-size="13">${h.number}</text>`);
   }
-  const placed = pointLayout(data2);
-  const pointAnchors = anchors(data2, asc);
+  const pointVisible = pointGlyphPredicate(options.glyphs);
+  const placed = pointLayout(data2, pointVisible);
+  const pointAnchors = anchors(data2, asc, pointVisible);
   if (options.aspects !== false) for (const aspect of data2.aspects) {
     const a = pointAnchors.get(aspect.a), b = pointAnchors.get(aspect.b);
     if (a === void 0 || b === void 0) continue;
@@ -65076,7 +65163,7 @@ var setSegment = (element, segment) => {
   element.setAttribute("x2", segment.end.x.toFixed(3));
   element.setAttribute("y2", segment.end.y.toFixed(3));
 };
-var renderWheel = (calculation) => {
+var renderWheel = (calculation, options = {}) => {
   const container = document.createElement("section");
   container.className = "chart-wheel";
   container.dataset["fingerprint"] = calculation.fingerprint;
@@ -65112,11 +65199,14 @@ var renderWheel = (calculation) => {
     sector2.setAttribute("tabindex", "0");
     sector2.dataset["sign"] = sign;
     zodiacGroup.append(sector2);
-    const glyphPoint = polar(normalise(start + 15), (wheelRadii.zodiacInner + wheelRadii.outer) / 2, ascendant);
-    const glyphGroup = svg("g");
-    glyphGroup.setAttribute("class", "wheel-sign-glyph");
-    addAssetGlyph(glyphGroup, signAsset(sign), signGlyphs[sign], glyphPoint.x, glyphPoint.y, 31, glyphFilterId);
-    zodiacGroup.append(glyphGroup);
+    if (signGlyphVisible(sign, options.glyphs)) {
+      const glyphPoint = polar(normalise(start + 15), (wheelRadii.zodiacInner + wheelRadii.outer) / 2, ascendant);
+      const glyphGroup = svg("g");
+      glyphGroup.setAttribute("class", "wheel-sign-glyph");
+      glyphGroup.dataset["sign"] = sign;
+      addAssetGlyph(glyphGroup, signAsset(sign), signGlyphs[sign], glyphPoint.x, glyphPoint.y, 31, glyphFilterId);
+      zodiacGroup.append(glyphGroup);
+    }
   }
   for (let longitude3 = 0; longitude3 < 360; longitude3 += 5) {
     line2(
@@ -65162,7 +65252,8 @@ var renderWheel = (calculation) => {
       houseGroup.append(label);
     }
   }
-  const placedPoints = pointLayout(calculation);
+  const pointVisible = pointGlyphPredicate(options.glyphs);
+  const placedPoints = pointLayout(calculation, pointVisible);
   const pointAnchors = /* @__PURE__ */ new Map();
   for (const placed of placedPoints) {
     const radius3 = wheelRadii.pointBase - placed.lane * 24;
@@ -65308,25 +65399,6 @@ var applyCanonicalWheelGlyphs = (wheel) => {
   applySpiritGlyph(wheel);
 };
 
-// src/wheel/visibility.ts
-var pointElement = (wheel, pointId) => wheel.querySelector(`.wheel-point[data-point="${pointId}"]`);
-function setChartWheelPointVisibility(wheel, pointId, visible) {
-  const point2 = pointElement(wheel, pointId);
-  if (point2 === null) return;
-  point2.style.display = visible ? "" : "none";
-  point2.setAttribute("aria-hidden", String(!visible));
-  point2.setAttribute("tabindex", visible ? "0" : "-1");
-  if (!visible) {
-    point2.classList.remove("is-active", "wheel-tooltip-active", "wheel-tooltip-endpoint");
-  }
-}
-function setChartWheelPointsVisibility(wheel, visibility) {
-  for (const [rawPointId, visible] of Object.entries(visibility)) {
-    if (visible === void 0) continue;
-    setChartWheelPointVisibility(wheel, rawPointId, visible);
-  }
-}
-
 // src/wheel/public.ts
 var numbers3 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 var selectedHouses = (meta) => Object.fromEntries(numbers3.map((number) => {
@@ -65362,7 +65434,7 @@ var fromPublic = (meta) => {
     aspects: meta.aspects.map((aspect) => ({ ...aspect }))
   };
 };
-var renderPublicWheel = (meta) => renderWheel(fromPublic(meta));
+var renderPublicWheel = (meta, options = {}) => renderWheel(fromPublic(meta), options);
 export {
   CalcError,
   CscCatalogue,
@@ -65453,6 +65525,9 @@ export {
   placeId,
   placidusCusps,
   planetIds,
+  pointGlyphCollection,
+  pointGlyphPredicate,
+  pointGlyphVisible,
   pointGlyphs,
   pointLayout,
   polar,
@@ -65466,11 +65541,13 @@ export {
   resolveBirthTime,
   rulershipProfile,
   sector,
+  setChartWheelCollectionVisibility,
   setChartWheelPointVisibility,
   setChartWheelPointsVisibility,
   shiftCusps,
   siderealPosition,
   signElements,
+  signGlyphVisible,
   signGlyphs,
   signModalities,
   signOrder,
@@ -65490,6 +65567,7 @@ export {
   vendorRevisions,
   wheelCentre,
   wheelData,
+  wheelPointCollections,
   wheelRadii,
   wheelSize,
   wholeSignCusps

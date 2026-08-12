@@ -25,10 +25,11 @@ export interface PlacedPoint {
     longitude: number;
     lane: number;
 }
-export declare const pointLayout: (data: WheelData) => PlacedPoint[];
+export type PointLayoutFilter = (pointId: PointId) => boolean;
+export declare const pointLayout: (data: WheelData, visible?: PointLayoutFilter) => PlacedPoint[];
 export declare const aspectSegment: (aspect: WheelAspect, start: Anchor, end: Anchor) => {
     start: Anchor;
     end: Anchor;
 };
-export declare const anchors: (data: WheelData, ascendant: number) => Map<PointId, Anchor>;
+export declare const anchors: (data: WheelData, ascendant: number, visible?: PointLayoutFilter) => Map<PointId, Anchor>;
 //# sourceMappingURL=geometry.d.ts.map

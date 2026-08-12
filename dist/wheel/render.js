@@ -1,4 +1,5 @@
 import { aspectSegment, forward as forwardDistance, normalise, pointGlyphs as pointFallback, pointLayout, polar, sector as sectorPath, signGlyphs, signOrder, titleCase, wheelCentre as centre, wheelRadii as radii, wheelSize as size } from "./geometry.js";
+import { pointGlyphPredicate, signGlyphVisible } from "./visibility.js";
 const svgNamespace = "http://www.w3.org/2000/svg";
 let wheelInstance = 0;
 const svg = (name) => document.createElementNS(svgNamespace, name);
@@ -100,7 +101,7 @@ const setSegment = (element, segment) => {
     element.setAttribute("x2", segment.end.x.toFixed(3));
     element.setAttribute("y2", segment.end.y.toFixed(3));
 };
-export const renderWheel = (calculation) => {
+export const renderWheel = (calculation, options = {}) => {
     const container = document.createElement("section");
     container.className = "chart-wheel";
     container.dataset["fingerprint"] = calculation.fingerprint;
@@ -137,11 +138,14 @@ export const renderWheel = (calculation) => {
         sector.setAttribute("tabindex", "0");
         sector.dataset["sign"] = sign;
         zodiacGroup.append(sector);
-        const glyphPoint = polar(normalise(start + 15), (radii.zodiacInner + radii.outer) / 2, ascendant);
-        const glyphGroup = svg("g");
-        glyphGroup.setAttribute("class", "wheel-sign-glyph");
-        addAssetGlyph(glyphGroup, signAsset(sign), signGlyphs[sign], glyphPoint.x, glyphPoint.y, 31, glyphFilterId);
-        zodiacGroup.append(glyphGroup);
+        if (signGlyphVisible(sign, options.glyphs)) {
+            const glyphPoint = polar(normalise(start + 15), (radii.zodiacInner + radii.outer) / 2, ascendant);
+            const glyphGroup = svg("g");
+            glyphGroup.setAttribute("class", "wheel-sign-glyph");
+            glyphGroup.dataset["sign"] = sign;
+            addAssetGlyph(glyphGroup, signAsset(sign), signGlyphs[sign], glyphPoint.x, glyphPoint.y, 31, glyphFilterId);
+            zodiacGroup.append(glyphGroup);
+        }
     }
     for (let longitude = 0; longitude < 360; longitude += 5) {
         line(root, longitude, longitude % 30 === 0 ? radii.outer - 14 : radii.outer - 7, radii.outer, ascendant, longitude % 30 === 0 ? "wheel-degree-tick major" : "wheel-degree-tick");
@@ -174,7 +178,8 @@ export const renderWheel = (calculation) => {
             houseGroup.append(label);
         }
     }
-    const placedPoints = pointLayout(calculation);
+    const pointVisible = pointGlyphPredicate(options.glyphs);
+    const placedPoints = pointLayout(calculation, pointVisible);
     const pointAnchors = new Map();
     for (const placed of placedPoints) {
         const radius = radii.pointBase - placed.lane * 24;

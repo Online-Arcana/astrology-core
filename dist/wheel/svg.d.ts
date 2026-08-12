@@ -1,4 +1,5 @@
 import type { WheelData } from "./types.js";
+import { type WheelGlyphs } from "./visibility.js";
 export interface SvgAssets {
     glyph(path: string): Promise<string>;
 }
@@ -15,6 +16,8 @@ export interface SvgOptions {
     aspects?: boolean;
     inner?: string;
     attrs?: Readonly<Record<string, string>>;
+    /** Controls zodiac and chart-point glyphs before point layout is calculated. */
+    glyphs?: WheelGlyphs;
     /** Orientation used when a caller deliberately renders an untimed/shell wheel. */
     orientationDegrees?: number;
     /** Set false when an untimed shell should stay visually empty in the centre. */

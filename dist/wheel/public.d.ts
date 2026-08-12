@@ -1,3 +1,4 @@
+import { type WheelRenderOptions } from "./render.js";
 import type { AspectKind, HouseSystem, PointId } from "../types/astro.js";
 import type { HouseNumber, WheelData } from "./types.js";
 export interface PublicWheelHouse {
@@ -25,5 +26,5 @@ export interface PublicWheelMeta {
     aspects: PublicWheelAspect[];
 }
 export declare const fromPublic: (meta: PublicWheelMeta) => WheelData;
-export declare const renderPublicWheel: (meta: PublicWheelMeta) => HTMLElement;
+export declare const renderPublicWheel: (meta: PublicWheelMeta, options?: WheelRenderOptions) => HTMLElement;
 //# sourceMappingURL=public.d.ts.map

@@ -34,5 +34,5 @@ export const fromPublic = (meta) => {
         aspects: meta.aspects.map((aspect) => ({ ...aspect })),
     };
 };
-export const renderPublicWheel = (meta) => renderWheel(fromPublic(meta));
+export const renderPublicWheel = (meta, options = {}) => renderWheel(fromPublic(meta), options);
 //# sourceMappingURL=public.js.map

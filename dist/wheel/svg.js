@@ -1,4 +1,5 @@
 import { aspectSegment, anchors, forward, normalise, pointGlyphs, pointLayout, polar, sector, signGlyphs, signOrder, titleCase, wheelCentre, wheelRadii, wheelSize } from "./geometry.js";
+import { pointGlyphPredicate, signGlyphVisible } from "./visibility.js";
 const defaults = { background: "#101019", ink: "#f7f3ff", muted: "#aaa1c0", line: "#6f6684", accent: "#d6c7ff" };
 const esc = (value) => value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 const assetPath = (id) => {
@@ -50,9 +51,11 @@ export const renderSvg = async (data, options = {}) => {
     for (let i = 0; i < signOrder.length; i += 1) {
         const sign = signOrder[i];
         const start = i * 30;
-        out.push(`<path class="zodiac" d="${sector(start, start + 30, wheelRadii.zodiacInner, wheelRadii.outer, asc)}"/>`);
-        const p = polar(start + 15, (wheelRadii.zodiacInner + wheelRadii.outer) / 2, asc);
-        out.push(await image(options.assets, `assets/astrology-glyphs/svg/zodiac/${sign}.svg`, signGlyphs[sign], p.x, p.y, 31));
+        out.push(`<path class="zodiac" data-sign="${sign}" d="${sector(start, start + 30, wheelRadii.zodiacInner, wheelRadii.outer, asc)}"/>`);
+        if (signGlyphVisible(sign, options.glyphs)) {
+            const p = polar(start + 15, (wheelRadii.zodiacInner + wheelRadii.outer) / 2, asc);
+            out.push(`<g class="zodiac-glyph" data-sign="${sign}">${await image(options.assets, `assets/astrology-glyphs/svg/zodiac/${sign}.svg`, signGlyphs[sign], p.x, p.y, 31)}</g>`);
+        }
     }
     for (let longitude = 0; longitude < 360; longitude += 5)
         out.push(line(longitude, longitude % 30 === 0 ? wheelRadii.outer - 14 : wheelRadii.outer - 7, wheelRadii.outer, asc, "tick"));
@@ -68,8 +71,9 @@ export const renderSvg = async (data, options = {}) => {
             const p = polar(middle, 233, asc);
             out.push(`<text x="${p.x.toFixed(3)}" y="${(p.y + 5).toFixed(3)}" text-anchor="middle" font-size="13">${h.number}</text>`);
         }
-    const placed = pointLayout(data);
-    const pointAnchors = anchors(data, asc);
+    const pointVisible = pointGlyphPredicate(options.glyphs);
+    const placed = pointLayout(data, pointVisible);
+    const pointAnchors = anchors(data, asc, pointVisible);
     if (options.aspects !== false)
         for (const aspect of data.aspects) {
             const a = pointAnchors.get(aspect.a), b = pointAnchors.get(aspect.b);

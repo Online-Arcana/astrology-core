@@ -42,8 +42,14 @@ export const sector = (start, end, inner, outer, ascendant) => {
     commands.push("Z");
     return commands.join(" ");
 };
-export const pointLayout = (data) => {
-    const points = Object.entries(data.points).flatMap(([rawId, point]) => point.position.value === null ? [] : [{ id: rawId, longitude: point.position.value.longitudeDegrees }]).sort((left, right) => left.longitude - right.longitude || left.id.localeCompare(right.id));
+const allPoints = () => true;
+export const pointLayout = (data, visible = allPoints) => {
+    const points = Object.entries(data.points).flatMap(([rawId, point]) => {
+        const id = rawId;
+        return point.position.value === null || !visible(id)
+            ? []
+            : [{ id, longitude: point.position.value.longitudeDegrees }];
+    }).sort((left, right) => left.longitude - right.longitude || left.id.localeCompare(right.id));
     const last = [null, null, null, null, null];
     return points.map((point) => {
         let lane = 0;
@@ -81,5 +87,5 @@ const extend = (start, end, amount) => {
     return { start: { x: start.x - ux * amount, y: start.y - uy * amount }, end: { x: end.x + ux * amount, y: end.y + uy * amount } };
 };
 export const aspectSegment = (aspect, start, end) => aspect.kind === "conjunction" ? extend(start, end, 18) : shorten(start, end, 15);
-export const anchors = (data, ascendant) => new Map(pointLayout(data).map((point) => [point.id, polar(point.longitude, wheelRadii.pointBase - point.lane * 24, ascendant)]));
+export const anchors = (data, ascendant, visible = allPoints) => new Map(pointLayout(data, visible).map((point) => [point.id, polar(point.longitude, wheelRadii.pointBase - point.lane * 24, ascendant)]));
 //# sourceMappingURL=geometry.js.map
