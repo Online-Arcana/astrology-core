@@ -43,8 +43,15 @@ export const sector = (start: number, end: number, inner: number, outer: number,
   return commands.join(" ");
 };
 export interface PlacedPoint { id: PointId; longitude: number; lane: number; }
-export const pointLayout = (data: WheelData): PlacedPoint[] => {
-  const points = Object.entries(data.points).flatMap(([rawId, point]) => point.position.value === null ? [] : [{ id: rawId as PointId, longitude: point.position.value.longitudeDegrees }]).sort((left, right) => left.longitude - right.longitude || left.id.localeCompare(right.id));
+export type PointLayoutFilter = (pointId: PointId) => boolean;
+const allPoints: PointLayoutFilter = () => true;
+export const pointLayout = (data: WheelData, visible: PointLayoutFilter = allPoints): PlacedPoint[] => {
+  const points = Object.entries(data.points).flatMap(([rawId, point]) => {
+    const id = rawId as PointId;
+    return point.position.value === null || !visible(id)
+      ? []
+      : [{ id, longitude: point.position.value.longitudeDegrees }];
+  }).sort((left, right) => left.longitude - right.longitude || left.id.localeCompare(right.id));
   const last: (number | null)[] = [null, null, null, null, null];
   return points.map((point) => {
     let lane = 0;
@@ -70,4 +77,5 @@ const extend = (start: Anchor, end: Anchor, amount: number): { start: Anchor; en
   return { start: { x: start.x - ux * amount, y: start.y - uy * amount }, end: { x: end.x + ux * amount, y: end.y + uy * amount } };
 };
 export const aspectSegment = (aspect: WheelAspect, start: Anchor, end: Anchor): { start: Anchor; end: Anchor } => aspect.kind === "conjunction" ? extend(start, end, 18) : shorten(start, end, 15);
-export const anchors = (data: WheelData, ascendant: number): Map<PointId, Anchor> => new Map(pointLayout(data).map((point) => [point.id, polar(point.longitude, wheelRadii.pointBase - point.lane * 24, ascendant)]));
+export const anchors = (data: WheelData, ascendant: number, visible: PointLayoutFilter = allPoints): Map<PointId, Anchor> =>
+  new Map(pointLayout(data, visible).map((point) => [point.id, polar(point.longitude, wheelRadii.pointBase - point.lane * 24, ascendant)]));
