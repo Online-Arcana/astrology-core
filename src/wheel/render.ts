@@ -1,5 +1,5 @@
 import type { PointId, Sign, WheelData } from "./types.js";
-import { aspectSegment, forward as forwardDistance, normalise, pointGlyphs as pointFallback, pointLayout, polar, sector as sectorPath, signGlyphs, signOrder, titleCase, wheelCentre as centre, wheelRadii as radii, wheelSize as size, type Anchor as WheelPointAnchor } from "./geometry.js";
+import { aspectSegment, forward as forwardDistance, houseRomanNumeral, normalise, pointGlyphs as pointFallback, pointLayout, polar, sector as sectorPath, signGlyphs, signOrder, titleCase, wheelCentre as centre, wheelRadii as radii, wheelSize as size, type Anchor as WheelPointAnchor } from "./geometry.js";
 import { pointGlyphPredicate, signGlyphVisible, type WheelGlyphs } from "./visibility.js";
 
 const svgNamespace = "http://www.w3.org/2000/svg";
@@ -213,7 +213,7 @@ export const renderWheel = (calculation: WheelData, options: WheelRenderOptions 
       const middle = normalise(cusp.longitudeDegrees + forwardDistance(cusp.longitudeDegrees, end.longitudeDegrees) / 2);
       const labelPoint = polar(middle, 233, ascendant);
       const label = svg("text");
-      label.textContent = String(house.number);
+      label.textContent = houseRomanNumeral(house.number);
       label.setAttribute("x", String(labelPoint.x));
       label.setAttribute("y", String(labelPoint.y + 5));
       label.setAttribute("text-anchor", "middle");

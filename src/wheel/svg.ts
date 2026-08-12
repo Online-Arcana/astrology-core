@@ -1,5 +1,5 @@
 import type { PointId, Sign, WheelData } from "./types.js";
-import { aspectSegment, anchors, forward, normalise, pointGlyphs, pointLayout, polar, sector, signGlyphs, signOrder, titleCase, wheelCentre, wheelRadii, wheelSize } from "./geometry.js";
+import { aspectSegment, anchors, forward, houseRomanNumeral, normalise, pointGlyphs, pointLayout, polar, sector, signGlyphs, signOrder, titleCase, wheelCentre, wheelRadii, wheelSize } from "./geometry.js";
 import { pointGlyphPredicate, signGlyphVisible, type WheelGlyphs } from "./visibility.js";
 
 export interface SvgAssets { glyph(path: string): Promise<string>; }
@@ -69,7 +69,7 @@ export const renderSvg = async (data: WheelData, options: SvgOptions = {}): Prom
   }
   for(let longitude=0;longitude<360;longitude+=5) out.push(line(longitude, longitude%30===0?wheelRadii.outer-14:wheelRadii.outer-7,wheelRadii.outer,asc,"tick"));
   const house=data.houses[data.primaryHouseSystem];
-  if(timed&&house.status!=="unavailable") for(const h of Object.values(house.houses)){const c=h.cusp.value,e=h.end.value;if(c===null||e===null)continue;out.push(`<path class="house" d="${sector(c.longitudeDegrees,e.longitudeDegrees,wheelRadii.aspect,wheelRadii.zodiacInner,asc)}"/>`);out.push(line(c.longitudeDegrees,wheelRadii.aspect,wheelRadii.zodiacInner,asc,"cusp"));const middle=normalise(c.longitudeDegrees+forward(c.longitudeDegrees,e.longitudeDegrees)/2);const p=polar(middle,233,asc);out.push(`<text x="${p.x.toFixed(3)}" y="${(p.y+5).toFixed(3)}" text-anchor="middle" font-size="13">${h.number}</text>`);}
+  if(timed&&house.status!=="unavailable") for(const h of Object.values(house.houses)){const c=h.cusp.value,e=h.end.value;if(c===null||e===null)continue;out.push(`<path class="house" d="${sector(c.longitudeDegrees,e.longitudeDegrees,wheelRadii.aspect,wheelRadii.zodiacInner,asc)}"/>`);out.push(line(c.longitudeDegrees,wheelRadii.aspect,wheelRadii.zodiacInner,asc,"cusp"));const middle=normalise(c.longitudeDegrees+forward(c.longitudeDegrees,e.longitudeDegrees)/2);const p=polar(middle,233,asc);out.push(`<text x="${p.x.toFixed(3)}" y="${(p.y+5).toFixed(3)}" text-anchor="middle" font-size="13">${houseRomanNumeral(h.number)}</text>`);}
   const pointVisible=pointGlyphPredicate(options.glyphs);
   const placed=pointLayout(data,pointVisible); const pointAnchors=anchors(data,asc,pointVisible);
   if(options.aspects!==false) for(const aspect of data.aspects){const a=pointAnchors.get(aspect.a),b=pointAnchors.get(aspect.b);if(a===undefined||b===undefined)continue;const s=aspectSegment(aspect,a,b);out.push(`<line class="aspect" data-aspect="${esc(aspect.id)}" x1="${s.start.x.toFixed(3)}" y1="${s.start.y.toFixed(3)}" x2="${s.end.x.toFixed(3)}" y2="${s.end.y.toFixed(3)}"/>`);}

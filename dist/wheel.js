@@ -66,6 +66,8 @@ var wheelSize = 800;
 var wheelCentre = wheelSize / 2;
 var wheelRadii = { outer: 372, zodiacInner: 316, pointBase: 286, houseOuter: 254, aspect: 210 };
 var signOrder = ["aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"];
+var houseRomanNumerals = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+var houseRomanNumeral = (houseNumber) => houseRomanNumerals[houseNumber] ?? String(houseNumber);
 var signGlyphs = {
   aries: "\u2648\uFE0E",
   taurus: "\u2649\uFE0E",
@@ -333,7 +335,7 @@ var renderSvg = async (data, options = {}) => {
     out.push(line(c.longitudeDegrees, wheelRadii.aspect, wheelRadii.zodiacInner, asc, "cusp"));
     const middle = normalise(c.longitudeDegrees + forward(c.longitudeDegrees, e.longitudeDegrees) / 2);
     const p = polar(middle, 233, asc);
-    out.push(`<text x="${p.x.toFixed(3)}" y="${(p.y + 5).toFixed(3)}" text-anchor="middle" font-size="13">${h.number}</text>`);
+    out.push(`<text x="${p.x.toFixed(3)}" y="${(p.y + 5).toFixed(3)}" text-anchor="middle" font-size="13">${houseRomanNumeral(h.number)}</text>`);
   }
   const pointVisible = pointGlyphPredicate(options.glyphs);
   const placed = pointLayout(data, pointVisible);
@@ -556,7 +558,7 @@ var renderWheel = (calculation, options = {}) => {
       const middle = normalise(cusp.longitudeDegrees + forward(cusp.longitudeDegrees, end.longitudeDegrees) / 2);
       const labelPoint = polar(middle, 233, ascendant);
       const label = svg("text");
-      label.textContent = String(house.number);
+      label.textContent = houseRomanNumeral(house.number);
       label.setAttribute("x", String(labelPoint.x));
       label.setAttribute("y", String(labelPoint.y + 5));
       label.setAttribute("text-anchor", "middle");
@@ -757,6 +759,8 @@ export {
   emptyWheelPoints,
   forward,
   fromPublic,
+  houseRomanNumeral,
+  houseRomanNumerals,
   normalise,
   pointGlyphCollection,
   pointGlyphPredicate,

@@ -9,6 +9,8 @@ export declare const wheelRadii: {
     readonly aspect: 210;
 };
 export declare const signOrder: readonly ["aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"];
+export declare const houseRomanNumerals: readonly ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+export declare const houseRomanNumeral: (houseNumber: number) => string;
 export declare const signGlyphs: Readonly<Record<Sign, string>>;
 export declare const pointGlyphs: Readonly<Partial<Record<PointId, string>>>;
 export declare const titleCase: (value: string) => string;

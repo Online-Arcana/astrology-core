@@ -4,6 +4,8 @@ export const wheelSize = 800;
 export const wheelCentre = wheelSize / 2;
 export const wheelRadii = { outer: 372, zodiacInner: 316, pointBase: 286, houseOuter: 254, aspect: 210 } as const;
 export const signOrder = ["aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"] as const satisfies readonly Sign[];
+export const houseRomanNumerals = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"] as const;
+export const houseRomanNumeral = (houseNumber: number): string => houseRomanNumerals[houseNumber] ?? String(houseNumber);
 export const signGlyphs: Readonly<Record<Sign, string>> = {
   aries: "♈︎", taurus: "♉︎", gemini: "♊︎", cancer: "♋︎", leo: "♌︎", virgo: "♍︎",
   libra: "♎︎", scorpio: "♏︎", sagittarius: "♐︎", capricorn: "♑︎", aquarius: "♒︎", pisces: "♓︎",

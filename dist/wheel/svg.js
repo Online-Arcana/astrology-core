@@ -1,4 +1,4 @@
-import { aspectSegment, anchors, forward, normalise, pointGlyphs, pointLayout, polar, sector, signGlyphs, signOrder, titleCase, wheelCentre, wheelRadii, wheelSize } from "./geometry.js";
+import { aspectSegment, anchors, forward, houseRomanNumeral, normalise, pointGlyphs, pointLayout, polar, sector, signGlyphs, signOrder, titleCase, wheelCentre, wheelRadii, wheelSize } from "./geometry.js";
 import { pointGlyphPredicate, signGlyphVisible } from "./visibility.js";
 const defaults = { background: "#101019", ink: "#f7f3ff", muted: "#aaa1c0", line: "#6f6684", accent: "#d6c7ff" };
 const esc = (value) => value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -69,7 +69,7 @@ export const renderSvg = async (data, options = {}) => {
             out.push(line(c.longitudeDegrees, wheelRadii.aspect, wheelRadii.zodiacInner, asc, "cusp"));
             const middle = normalise(c.longitudeDegrees + forward(c.longitudeDegrees, e.longitudeDegrees) / 2);
             const p = polar(middle, 233, asc);
-            out.push(`<text x="${p.x.toFixed(3)}" y="${(p.y + 5).toFixed(3)}" text-anchor="middle" font-size="13">${h.number}</text>`);
+            out.push(`<text x="${p.x.toFixed(3)}" y="${(p.y + 5).toFixed(3)}" text-anchor="middle" font-size="13">${houseRomanNumeral(h.number)}</text>`);
         }
     const pointVisible = pointGlyphPredicate(options.glyphs);
     const placed = pointLayout(data, pointVisible);

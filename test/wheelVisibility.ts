@@ -1,5 +1,5 @@
 import { emptyWheelData } from "../src/wheel/data.js";
-import { pointLayout } from "../src/wheel/geometry.js";
+import { houseRomanNumeral, pointLayout } from "../src/wheel/geometry.js";
 import { renderSvg } from "../src/wheel/svg.js";
 import {
   pointGlyphCollection,
@@ -64,6 +64,13 @@ await test("individual zodiac sign overrides the zodiac collection", () => {
   } as const;
   equal(signGlyphVisible("capricorn", glyphs), true, "specific sign override");
   equal(signGlyphVisible("aquarius", glyphs), false, "other sign hidden");
+});
+
+await test("house labels use Roman numerals", () => {
+  const expected = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+  for (let index = 0; index < expected.length; index += 1) {
+    equal(houseRomanNumeral(index + 1), expected[index], `house ${index + 1}`);
+  }
 });
 
 await test("hidden points are removed before collision-lane assignment", () => {
