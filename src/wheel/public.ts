@@ -1,4 +1,4 @@
-import { renderWheel } from "./render.js";
+import { renderWheel, type WheelRenderOptions } from "./render.js";
 import { emptyWheelHouseChart, emptyWheelHouses, emptyWheelPoints } from "./data.js";
 import type { AspectKind, HouseSystem, PointId } from "../types/astro.js";
 import type { HouseNumber, WheelData, WheelHouseChart, WheelHouseMap, WheelPoint } from "./types.js";
@@ -50,4 +50,5 @@ export const fromPublic = (meta: PublicWheelMeta): WheelData => {
     aspects: meta.aspects.map((aspect) => ({ ...aspect })),
   };
 };
-export const renderPublicWheel = (meta: PublicWheelMeta): HTMLElement => renderWheel(fromPublic(meta));
+export const renderPublicWheel = (meta: PublicWheelMeta, options: WheelRenderOptions = {}): HTMLElement =>
+  renderWheel(fromPublic(meta), options);
